@@ -270,7 +270,7 @@ while True:
         Touch.Gestures = 'none'
     if Touch.Gestures == 0x0C:
         LCD.sleep_mode(0)
-        LCD.set_bl_pwm(10000)
+        LCD.set_bl_pwm(backlight)
         Touch.Gestures = 'none'
     if Touch.Gestures == 0x01:#向上滑，+ 亮度
         backlight = backlight + 1000
