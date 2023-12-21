@@ -2,7 +2,8 @@ from machine import Pin,I2C,SPI,PWM,Timer,ADC
 import framebuf
 import time
 Vbat_Pin = 29
-#Pin definition 
+
+#Pin definition  引脚定义
 I2C_SDA = 6
 I2C_SDL = 7
 I2C_INT = 17
@@ -17,7 +18,7 @@ RST = 13
 
 BL = 25
 
-#LCD Driver
+#LCD Driver  LCD驱动
 class LCD_1inch28(framebuf.FrameBuffer):
     def __init__(self): #SPI initialization  SPI初始化
         self.width = 240
@@ -27,7 +28,7 @@ class LCD_1inch28(framebuf.FrameBuffer):
         self.rst = Pin(RST,Pin.OUT)
         
         self.cs(1)
-        self.spi = SPI(1,62500000,polarity=0, phase=0,bits= 8,sck=Pin(SCK),mosi=Pin(MOSI),miso=None)
+        self.spi = SPI(1,100_000_000,polarity=0, phase=0,bits= 8,sck=Pin(SCK),mosi=Pin(MOSI),miso=None)
         self.dc = Pin(DC,Pin.OUT)
         self.dc(1)
         self.buffer = bytearray(self.height * self.width * 2)
@@ -67,7 +68,6 @@ class LCD_1inch28(framebuf.FrameBuffer):
         
     def color(self,R,G,B):
         return (((G&0b00011100)<<3) +((B&0b11111000)>>3)<<8) + (R&0b11111000)+((G&0b11100000)>>5)
-    
     def init_display(self): #LCD initialization  LCD初始化
         """Initialize dispaly"""  
         self.rst(1)
@@ -342,6 +342,8 @@ class LCD_1inch28(framebuf.FrameBuffer):
         display here is reduced by 10, and the end point
         is increased by 10
     '''
+    #Partial display, the starting point of the local display here is reduced by 10, and the end point is increased by 10
+    #局部显示，这里的局部显示起点减少10，终点增加10
     def Windows_show(self,Xstart,Ystart,Xend,Yend):
         if Xstart > Xend:
             data = Xstart
@@ -371,6 +373,7 @@ class LCD_1inch28(framebuf.FrameBuffer):
         self.cs(1)
         
     #Write characters, size is the font size, the minimum is 1  
+    #写字符，size为字体大小,最小为1
     def write_text(self,text,x,y,size,color):
         ''' Method to write Text on OLED/LCD Displays
             with a variable font size
@@ -396,19 +399,8 @@ class LCD_1inch28(framebuf.FrameBuffer):
         self.text(text,x,y,background)
         # Writing the custom-sized font characters on screen
         for px_info in info:
-            self.fill_rect(size*px_info[0] - (size-1)*x , size*px_info[1] - (size-1)*y, size, size, px_info[2])
+            self.fill_rect(size*px_info[0] - (size-1)*x , size*px_info[1] - (size-1)*y, size, size, px_info[2]) 
     
-    def sleep_mode(self, value):
-        """
-        Enable or disable display sleep mode.
-        Args:
-            value (bool): if True enable sleep mode.
-                if False disable sleep mode
-        """
-        if value:
-            self.write_cmd(0x10)
-        else:
-            self.write_cmd(0x11)
         
 #Touch drive  触摸驱动
 class Touch_CST816T(object):
@@ -422,9 +414,9 @@ class Touch_CST816T(object):
         self.Reset()
         bRet=self.WhoAmI()
         if bRet :
-            #print("Success:Detected CST816T.")
+            print("Success:Detected CST816T.")
             Rev= self.Read_Revision()
-            #print("CST816T Revision = {}".format(Rev))
+            print("CST816T Revision = {}".format(Rev))
             self.Stop_Sleep()
         else    :
             print("Error: Not Detected CST816T.")
@@ -486,7 +478,6 @@ class Touch_CST816T(object):
         
         x_point= ((xy_point[0]&0x0f)<<8)+xy_point[1]
         y_point= ((xy_point[2]&0x0f)<<8)+xy_point[3]
-       
         
         self.X_point=x_point
         self.Y_point=y_point
@@ -726,9 +717,29 @@ def DOF_READ():
             break
 
 if __name__=='__main__':
+  
     LCD = LCD_1inch28()
     LCD.set_bl_pwm(65535)
+
     Touch=Touch_CST816T(mode=1,LCD=LCD)
-    #DOF_READ()
-    #Touch_Gesture()
+
+    DOF_READ()
+
+    Touch_Gesture()
+    
     Touch_HandWriting()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
