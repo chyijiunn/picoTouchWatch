@@ -122,7 +122,7 @@ def watch():
     spin((6*now[4]+0.1*now[5]),3,minspin,c)
     LCD.line(cx,cy,cx+x_shift,cy-y_shift,c)
 
-def pickcolor():
+def showcolor():
     Touch.Set_Mode(1)
     BG = color(0,0,0)
     LCD.fill(BG)
@@ -153,7 +153,7 @@ for i in range(12):#再畫時刻度線
 
 while True:
     if Touch.Gestures == 0x03:
-        pickcolor()
+        showcolor()
         Touch.Gestures = 'none'
     else:watch()
 
