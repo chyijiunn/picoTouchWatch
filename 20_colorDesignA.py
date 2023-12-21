@@ -142,14 +142,6 @@ def daycolor():
     elif now[6] == 6 : daycolor = color(255,0,0)
     else : daycolor = color(255,255,255)
     return daycolor
-
-def runDotRing(cx, cy , thick , reach , r , color):
-    x = int(r*math.sin(math.radians(reach*360)))
-    y = int(r*math.cos(math.radians(reach*360)))
-    for i in range(-thick,thick,1):
-        for j in range(-thick,thick,1):
-            if i*i + j*j <=  r*r:
-                LCD.pixel(cx+x+i,cy-y+j,color)
                 
 def circle(cx,cy,r,color):
     for i in range(-r,r,1):
@@ -162,6 +154,14 @@ def Ring(cx, cy , thick , r , color):
         for j in range(-(r+thick),r+thick,1):
             if (i*i + j*j <  (r+thick)*(r+thick) )and (i*i + j*j > r*r):
                 LCD.pixel(cx+i,cy+j,color)
+
+def runDotRing(cx, cy , thick , reach , r , color):
+    x = int(r*math.sin(math.radians(reach*360)))
+    y = int(r*math.cos(math.radians(reach*360)))
+    for i in range(-thick,thick,1):
+        for j in range(-thick,thick,1):
+            if i*i + j*j <=  r*r:
+                LCD.pixel(cx+x+i,cy-y+j,color)
                 
 def BackRunDotRing(cx, cy , thick , reach , r , color):
     x = int(r*math.sin(math.radians(reach*360)))
@@ -170,8 +170,15 @@ def BackRunDotRing(cx, cy , thick , reach , r , color):
         for j in range(-thick,thick,1):
             if i*i + j*j <=  (r+thick)*(r+thick):
                 LCD.pixel(cx+x+i,cy-y+j,color)
-                
-def walkandRun():
+
+def refresh():
+    LCD.fill_rect(182,173,10,10,BG)#右圈
+    LCD.fill_rect(113,173,25,10,BG)#中圈
+    LCD.fill_rect(42,173,10,10,BG)#右圈
+    LCD.fill_rect(120,70,80,10,BG)#右上長條1刷除
+    LCD.fill_rect(120,58,80,10,BG)#右上長條2 backlight 刷除
+    
+def littlefuntion():
     global walknum , runnum , walkTARGET , runTARGET ,backlight
     xyz=touch.QMI8658().Read_XYZ()
     N1 = xyz[5]
@@ -217,13 +224,6 @@ def walkandRun():
     LCD.write_text(str(int(runreach*100)), 42, 173,1,FG)
     return bat_remain
 
-def refresh():
-    LCD.fill_rect(182,173,10,10,BG)#右圈
-    LCD.fill_rect(113,173,25,10,BG)#中圈
-    LCD.fill_rect(42,173,10,10,BG)#右圈
-    LCD.fill_rect(120,70,80,10,BG)#右上長條1刷除
-    LCD.fill_rect(120,58,80,10,BG)#右上長條2 backlight 刷除
-
 def stoptime():
     N1 = time.ticks_ms()#Start 時刻
     digitalxstart = 60
@@ -251,10 +251,10 @@ def stoptime():
         LCD.line(120,180,120+x_shift,180-y_shift,BG)#秒錶更新
         if xyz0[1] < -0.95 :break#y軸近垂直於地面，左手朝上
     
-def showBGcolor():
+def showvarycolor():
     for i in range(0,255,20):
         for j in range(0,255,20):
-            LCD.fill_rect(i,j,20,20,color(i,j,colorB))
+            LCD.fill_rect(i,j,20,20,color(i,j,125))
     LCD.show()
 
 def pickcolor():
@@ -269,15 +269,15 @@ def pickcolor():
             y = Touch.Y_point
             return x , y 
             break
+        
 def colorini():
     global colorR , colorG , colorB , c_colorR , c_colorG , c_colorB,tickmark_h_color,tickmark_m_color,BATcolor , seccolor, minspincolor, hourspincolor,digiseccolor,digitimecolor
     c_colorR , c_colorG , c_colorB = 255-colorR , 255-colorG, 255-colorB
     tickmark_h_color = color(c_colorR,c_colorG,c_colorB)
     tickmark_m_color = color(c_colorR,c_colorG,c_colorB)
-    seccolor , minspincolor , hourspincolor =color(colorR,225,0),color(colorR,colorG,colorB) ,color(int((colorR+colorG)/2),colorG,colorB)
+    seccolor , minspincolor , hourspincolor =color(colorR,225,0),color(255,colorG,125) ,color(255,colorG,125)
     digiseccolor , digitimecolor = seccolor , hourspincolor
     BATcolor = color(125,255,125)
-    
     
 backlight = 35535
 LCD.set_bl_pwm(backlight)
@@ -294,7 +294,6 @@ tickmark_h , tick_mark_m = platesize-3 , platesize
 
 #針長度、顏色
 secspin ,minspin , hourspin = tickmark_h-5,platesize - 4 ,platesize/2
-colorini()
 
 walknum = 0
 walkTARGET = 100 # 每天要走幾步
@@ -315,21 +314,22 @@ def plateini():
     #中圈環狀
     Ring(120,180,2,23,BATcolor)
     LCD.show()
-
-plateini()
+    
+colorini()#初始化顏色設定
+plateini()#初始化錶盤設定
 
 while True:
     if Touch.Gestures == 0x0C:#長按，改背景色，點第二下才能選色
         Touch.Gestures = 'none'
         Touch=touch.Touch_CST816T(mode=1,LCD=LCD)
         LCD.fill(BG)
-        showBGcolor()
+        showvarycolor()
         while pickcolor() != 0:
             colorR , colorG = pickcolor()
             break
         Touch=touch.Touch_CST816T(mode=0,LCD=LCD)
+        BG = color(colorR,colorG,125)
         colorini()
-        BG = color(c_colorR,c_colorG,c_colorB)
         plateini()
         
         
@@ -360,4 +360,4 @@ while True:
     else:
         watch()
         refresh()
-        walkandRun()
+        littlefuntion()
