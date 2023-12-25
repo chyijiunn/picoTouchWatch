@@ -312,7 +312,6 @@ while True:
         Touch.Gestures = 'none'
         stoptime()
         
-         
     else:
         watch()
         refresh()
