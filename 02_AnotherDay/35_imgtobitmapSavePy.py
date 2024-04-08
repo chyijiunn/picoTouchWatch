@@ -1,8 +1,8 @@
 '''
-用python3
-於終端機輸入 python3 18_imgtobitmap.py media/filename.bmp 4
-執行 18_imgtobitmap.py 這個程式 用於檔案 media/資料夾下的 file 圖檔深度為 4 位元 = 2^4 colors
-執行後，另存檔案，含附檔名 .py，上傳到 pico 根目錄
+修改自 imgtobitmap.py
+於終端機輸入 python3 35_imgtobitmapSavePy.py media/filename.bmp 8
+注意檔案大小建議 120*120 -> 8 bit , 180*180 -> 7bit 
+執行結束儲存成 bmp.py
 '''
 from PIL import Image
 import argparse
@@ -63,35 +63,36 @@ def main():
     bitmap_bits = len(image_bitstring)
 
     # Create python source with image parameters
-    print(f'HEIGHT = {img.height}')
-    print(f'WIDTH = {img.width}')
-    print(f'COLORS = {max_colors}')
-    print(f'BITS = {bitmap_bits}')
-    print(f'BPP = {bits}')
-    print('PALETTE = [', sep='', end='')
+    
+    data = open('bmp.py','w')
+    data.write(f'HEIGHT = {img.height}'+'\n')
+    data.write(f'WIDTH = {img.width}'+'\n')
+    data.write(f'COLORS = {max_colors}'+'\n')
+    data.write(f'BITS = {bitmap_bits}'+'\n')
+    data.write(f'BPP = {bits}'+'\n')
+    data.write('PALETTE = [')
 
     for color, rgb in enumerate(colors):
         if color:
-            print(',', sep='', end='')
-        print(f'0x{rgb}', sep='', end='')
-    print("]")
+            data.write(',')
+        data.write(str(f'0x{rgb}'))
+    data.write("]"+'\n')
 
     # Run though image bit string 8 bits at a time
     # and create python array source for memoryview
 
-    print("_bitmap =\\", sep='')
-    print("b'", sep='', end='')
+    data.write("_bitmap =\\"+'\n')
+    data.write("b'")
 
     for i in range(0, bitmap_bits, 8):
 
         if i and i % (16*8) == 0:
-            print("'\\\nb'", end='', sep='')
+            data.write("'\\\nb'")
 
         value = image_bitstring[i:i+8]
         color = int(value, 2)
-        print(f'\\x{color:02x}', sep='', end='')
+        data.write(str(f'\\x{color:02x}'))
 
-    print("'\nBITMAP = memoryview(_bitmap)")
-
-
+    data.write("'\nBITMAP = memoryview(_bitmap)")
+    data.close()
 main()

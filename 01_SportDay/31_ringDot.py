@@ -5,6 +5,7 @@ import time , touch, math
 LCD = touch.LCD_1inch28()
 qmi8658 = touch.QMI8658()
 LCD.set_bl_pwm(15535)
+color = LCD.color
 cx , cy =120 ,120 #center of watch
 NUM = 0
 TARGET = 100#一天行走的目標
@@ -27,6 +28,6 @@ while 1:
     xyz=qmi8658.Read_XYZ()
     N2 = xyz[5]
     if N1*N2 < 0:NUM=NUM+1
-    runDotRing(NUM,110,LCD.red)#紅點繞行秒針
+    runDotRing(NUM,110,color(250,30,60))#紅點繞行秒針
     LCD.show()
 
