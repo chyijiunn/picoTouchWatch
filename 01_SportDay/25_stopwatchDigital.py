@@ -1,14 +1,13 @@
 from machine import Pin, SPI
 import random ,utime ,touch
 LCD = touch.LCD_1inch28()
-LCD.set_bl_pwm(15535)
+LCD.set_bl_pwm(10000)
 
 N1 = utime.ticks_ms()# 讀取 utime.ticks_ms() 存為 N1
 digitalxstart = 60
 digitalystart = 100
 
 R,G,B = (random.getrandbits(8),random.getrandbits(8),random.getrandbits(8))
-
 
 #設定前景色與背景色
 BG = LCD.color(R,G,B)

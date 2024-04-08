@@ -28,6 +28,3 @@ def pickcolor():
         LCD.show()
 
 pickcolor()
-
-
-

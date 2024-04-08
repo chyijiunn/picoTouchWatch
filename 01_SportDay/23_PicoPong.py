@@ -1,9 +1,9 @@
 # PicoPong.py: a simple Pong game by Vincent Mistler (YouMakeTech)
-# 用上次的乒乓來試試看，若要旋轉表盤來移動，應該修改成什麼？往下到 41th line
+# 引用別人寫好的乒乓來測試，若要旋轉表盤來移動，應該修改成什麼？往下到 41th line
 import random , touch , machine ,time
 
 LCD = touch.LCD_1inch28()
-LCD.set_bl_pwm(3000)
+LCD.set_bl_pwm(10000)
 qmi8658=touch.QMI8658()
 Vbat= machine.ADC(machine.Pin(29))
 

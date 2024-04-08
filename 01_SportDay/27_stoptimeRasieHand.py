@@ -33,7 +33,7 @@ def stoptime_main():
     
 while Touch.Gestures != 0x03:
     LCD.fill(LCD.black)
-    LCD.write_text('Right',80,125,2,color(90,180,40))
+    LCD.write_text('SlideRight',45,125,2,color(90,180,40))
     LCD.write_text('Enter StopTime',70,150,1,color(90,180,40))
     LCD.show()
     

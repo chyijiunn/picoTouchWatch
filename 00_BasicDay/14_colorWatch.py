@@ -50,7 +50,7 @@ while 1:
     G = random.randint(0,256)
     B = random.randint(0,256)
     '''
-    LCD.fill_rect(0,00,240,240,0)
+    LCD.fill_rect(0,0,240,240,0)
     #centerCircle(5,120,color(R,G,256-B))#秒
     #spin(5,120,color(R,256-G,256-B))#秒
     spin(4,100,color(256-R,256-G,256-B))#分
