@@ -312,15 +312,15 @@ class LCD_1inch28(framebuf.FrameBuffer):
         self.write_cmd(0x29)
         
         '''
-    螢幕旋轉 cmd
-    0x48,   # 0 - PORTRAIT
-    0x28,   # 1 - LANDSCAPE
-    0x88,   # 2 - INVERTED_PORTRAIT
-    0xe8,   # 3 - INVERTED_LANDSCAPE
-    0x08,   # 4 - PORTRAIT_MIRRORED
-    0x68,   # 5 - LANDSCAPE_MIRRORED
-    0xc8,   # 6 - INVERTED_PORTRAIT_MIRRORED
-    0xa8]   # 7 - INVERTED_LANDSCAPE_MIRRORED]
+        螢幕旋轉 cmd
+        0x48,   # 0 - PORTRAIT
+        0x28,   # 1 - LANDSCAPE
+        0x88,   # 2 - INVERTED_PORTRAIT
+        0xe8,   # 3 - INVERTED_LANDSCAPE
+        0x08,   # 4 - PORTRAIT_MIRRORED
+        0x68,   # 5 - LANDSCAPE_MIRRORED
+        0xc8,   # 6 - INVERTED_PORTRAIT_MIRRORED
+        0xa8]   # 7 - INVERTED_LANDSCAPE_MIRRORED]
         '''
         self.write_cmd(0x36)
         self.write_data(0x48)#螢幕旋轉0 - PORTRAIT
