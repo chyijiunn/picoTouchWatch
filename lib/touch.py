@@ -323,7 +323,7 @@ class LCD_1inch28(framebuf.FrameBuffer):
     0xa8]   # 7 - INVERTED_LANDSCAPE_MIRRORED]
         '''
         self.write_cmd(0x36)
-        self.write_data(0x68)#螢幕旋轉#5 landscape mirrored
+        self.write_data(0x48)#螢幕旋轉0 - PORTRAIT
     
     #window setting
     def setWindows(self,Xstart,Ystart,Xend,Yend): 
