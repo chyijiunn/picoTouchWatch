@@ -6,7 +6,7 @@ qmi8658=touch.QMI8658()
 
 color = LCD.color
 LCD.set_bl_pwm(35535)
-cx , cy =120 ,120 
+cx , cy =120 ,120
 R,G,B = (random.getrandbits(8),random.getrandbits(8),random.getrandbits(8))
 
 def spin( tic , spinLen , color):

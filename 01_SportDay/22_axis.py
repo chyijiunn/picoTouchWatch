@@ -2,7 +2,7 @@
 import touch#引入寫好的
 LCD = touch.LCD_1inch28()
 
-LCD.set_bl_pwm(3000)#亮度~65535
+LCD.set_bl_pwm(0)#亮度~65535
 qmi8658=touch.QMI8658()
 
 while True:

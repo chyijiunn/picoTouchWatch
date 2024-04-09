@@ -19,7 +19,7 @@ BL = 25
 
 #LCD Driver
 class LCD_1inch28(framebuf.FrameBuffer):
-    def __init__(self): #SPI initialization  SPI初始化
+    def __init__(self): #SPI initialization  SPI
         self.width = 240
         self.height = 240
         
@@ -34,7 +34,7 @@ class LCD_1inch28(framebuf.FrameBuffer):
         super().__init__(self.buffer, self.width, self.height, framebuf.RGB565)
         self.init_display()
         
-        #Define color, Micropython fixed to BRG format  定义颜色，Micropython固定为BRG格式
+        #Define color, Micropython fixed to BRG format ，Micropython固定为BRG格式
         self.red   =   0x07E0
         self.green =   0x001f
         self.blue  =   0xf800
@@ -42,33 +42,33 @@ class LCD_1inch28(framebuf.FrameBuffer):
         self.black =   0x0000
         self.brown =   0X8430
         
-        self.fill(self.white) #Clear screen  清屏
-        self.show()#Show  显示
+        self.fill(self.white) #Clear screen
+        self.show()#Show 
 
         self.pwm = PWM(Pin(BL))
-        self.pwm.freq(5000) #Turn on the backlight  开背光
+        self.pwm.freq(5000) #Turn on the backlight
         
-    def write_cmd(self, cmd): #Write command  写命令
+    def write_cmd(self, cmd): #Write command
         self.cs(1)
         self.dc(0)
         self.cs(0)
         self.spi.write(bytearray([cmd]))
         self.cs(1)
 
-    def write_data(self, buf): #Write data  写数据
+    def write_data(self, buf): #Write data
         self.cs(1)
         self.dc(1)
         self.cs(0)
         self.spi.write(bytearray([buf]))
         self.cs(1)
         
-    def set_bl_pwm(self,duty): #Set screen brightness  设置屏幕亮度
+    def set_bl_pwm(self,duty): #Set screen brightness
         self.pwm.duty_u16(duty)#max 65535
         
     def color(self,R,G,B):
         return (((G&0b00011100)<<3) +((B&0b11111000)>>3)<<8) + (R&0b11111000)+((G&0b11100000)>>5)
     
-    def init_display(self): #LCD initialization  LCD初始化
+    def init_display(self): #LCD initialization
         """Initialize dispaly"""  
         self.rst(1)
         time.sleep(0.01)
@@ -310,8 +310,22 @@ class LCD_1inch28(framebuf.FrameBuffer):
         self.write_cmd(0x11)
 
         self.write_cmd(0x29)
+        
+        '''
+    螢幕旋轉 cmd
+    0x48,   # 0 - PORTRAIT
+    0x28,   # 1 - LANDSCAPE
+    0x88,   # 2 - INVERTED_PORTRAIT
+    0xe8,   # 3 - INVERTED_LANDSCAPE
+    0x08,   # 4 - PORTRAIT_MIRRORED
+    0x68,   # 5 - LANDSCAPE_MIRRORED
+    0xc8,   # 6 - INVERTED_PORTRAIT_MIRRORED
+    0xa8]   # 7 - INVERTED_LANDSCAPE_MIRRORED]
+        '''
+        self.write_cmd(0x36)
+        self.write_data(0x68)#螢幕旋轉#5 landscape mirrored
     
-    #设置窗口    
+    #window setting
     def setWindows(self,Xstart,Ystart,Xend,Yend): 
         self.write_cmd(0x2A)
         self.write_data(0x00)
@@ -327,7 +341,7 @@ class LCD_1inch28(framebuf.FrameBuffer):
         
         self.write_cmd(0x2C)
      
-    #Show  显示   
+    #Show
     def show(self): 
         self.setWindows(0,0,self.width,self.height)
         
@@ -410,12 +424,12 @@ class LCD_1inch28(framebuf.FrameBuffer):
         else:
             self.write_cmd(0x11)
         
-#Touch drive  触摸驱动
+#Touch drive 
 class Touch_CST816T(object):
-    #Initialize the touch chip  初始化触摸芯片
+    #Initialize the touch chip 
     def __init__(self,address=0x15,mode=0,i2c_num=1,i2c_sda=6,i2c_scl=7,int_pin=21,rst_pin=22,LCD=None):
-        self._bus = I2C(id=i2c_num,scl=Pin(i2c_scl),sda=Pin(i2c_sda),freq=400_000) #Initialize I2C 初始化I2C
-        self._address = address #Set slave address  设置从机地址
+        self._bus = I2C(id=i2c_num,scl=Pin(i2c_scl),sda=Pin(i2c_sda),freq=400_000) #Initialize I2C
+        self._address = address #Set slave address  
         self.int=Pin(int_pin,Pin.IN, Pin.PULL_UP)     
         self.tim = Timer()     
         self.rst=Pin(rst_pin,Pin.OUT)
@@ -454,18 +468,18 @@ class Touch_CST816T(object):
     def Read_Revision(self):
         return self._read_byte(0xA9)
       
-    #Stop sleeping  停止睡眠
+    #Stop sleeping 
     def Stop_Sleep(self):
         self._write_byte(0xFE,0x01)
     
-    #Reset  复位    
+    #Reset
     def Reset(self):
         self.rst(0)
         time.sleep_ms(1)
         self.rst(1)
         time.sleep_ms(50)
     
-    #Set mode  设置模式   
+    #Set mode
     def Set_Mode(self,mode,callback_time=10,rest_time=5): 
         # mode = 0 gestures mode 
         # mode = 1 point mode 
@@ -480,7 +494,7 @@ class Touch_CST816T(object):
             self._write_byte(0xFA,0X11)
             self._write_byte(0xEC,0X01)
      
-    #Get the coordinates of the touch  获取触摸的坐标
+    #Get the coordinates of the touch 
     def get_point(self):
         xy_point = self._read_block(0x03,4)
         
@@ -578,7 +592,7 @@ class QMI8658(object):
         return xyz
 
 
-#Draw line and show  画线并显示  
+#Draw line and show  
 def Touch_HandWriting():
     x = y = data = 0
     color = 0
@@ -625,7 +639,7 @@ def Touch_HandWriting():
                     Touch.Flgh = 4
                     
                 if Touch.Flgh == 3:
-                    time.sleep(0.001) #Prevent disconnection  防止断触
+                    time.sleep(0.001) #Prevent disconnection 
                     if Touch.l < 25:           
                         Touch.Flag = 0
                         LCD.line(x,y,Touch.X_point,Touch.Y_point,color)
@@ -642,7 +656,7 @@ def Touch_HandWriting():
     except KeyboardInterrupt:
         pass
 
-#Gesture  手势
+#Gesture
 def Touch_Gesture():
     Touch.Mode = 0
     Touch.Set_Mode(Touch.Mode)

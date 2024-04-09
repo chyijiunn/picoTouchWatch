@@ -1,7 +1,7 @@
 import utime,touch
 
 LCD = touch.LCD_1inch28()
-LCD.set_bl_pwm(1000)
+LCD.set_bl_pwm(0)
 qmi8658=touch.QMI8658()
 
 ori_x = 120
