@@ -2,7 +2,7 @@ import time , touch
 from machine import Timer
 qmi8658=touch.QMI8658()#引入六軸
 LCD = touch.LCD_1inch28()
-Brightness =15535
+LCD.set_bl_pwm(15535)
         
 while True:
     xyz=qmi8658.Read_XYZ()
