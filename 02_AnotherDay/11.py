@@ -1,5 +1,5 @@
 from machine import Pin,I2C,SPI,PWM
-import framebuf , time , math
+import framebuf , time , math , touch
 
 DC = 8
 CS = 9
@@ -8,7 +8,7 @@ MOSI = 11
 RST = 12
 BL = 25
 Vbat_Pin = 29
-LCD = LCD_1inch28()
+LCD = touch.LCD_1inch28()
 LCD.set_bl_pwm(15535)
 
 class LCD_1inch28(framebuf.FrameBuffer):

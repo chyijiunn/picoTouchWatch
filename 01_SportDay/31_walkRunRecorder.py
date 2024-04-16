@@ -77,7 +77,7 @@ def record(dataname,sportState):
         xyz1 = qmi8658.Read_XYZ()
         
         if xyz1[5]*xyz0[5]<0:
-            data.write(str(now)+','+str(round(1000*xyz1[0],0)) +','+str(1000*round(xyz1[1],0))+','+str(1000*round(xyz1[2],0))+','+str(round(100*(xyz1[3]-xyz0[3]),0))+','+str(round(100*(xyz1[4]-xyz0[4]),0))+','+str(round(100*(xyz1[5]-xyz0[5]),0))+'\n')
+            data.write(str(now)+','+str(round(1000*xyz1[0],3)) +','+str(1000*round(xyz1[1],3))+','+str(1000*round(xyz1[2],3))+','+str(round(100*(xyz1[3]-xyz0[3]),3))+','+str(round(100*(xyz1[4]-xyz0[4]),3))+','+str(round(100*(xyz1[5]-xyz0[5]),3))+'\n')
             dataNum = dataNum + 1
         if  Touch.Gestures == 0x04:break#滑回主畫面
     data.close()

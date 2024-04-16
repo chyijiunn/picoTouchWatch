@@ -1,5 +1,5 @@
 from machine import Pin,I2C,SPI,PWM
-import framebuf , time , math
+import framebuf , time , math ,touch
 
 DC = 8
 CS = 9

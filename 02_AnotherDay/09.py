@@ -445,5 +445,3 @@ for i in range(ti):
     LCD.fill(LCD.white)
     
     print(i)
-
-

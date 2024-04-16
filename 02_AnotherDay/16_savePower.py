@@ -199,7 +199,7 @@ def walkandRun():
     
     #中圈：電力資料
     reading = ADC(Pin(29)) .read_u16()*3.3/65535*2
-    full = 2.63
+    full = 2.75
     if reading > full : reading = full 
     bat_remain = (reading - 2.25 ) / (full -2.25)  #(測得電壓-終止電壓)除以(飽和電壓-終止電壓)
     BackRunDotRing(120,180,3,bat_remain,25,BG)

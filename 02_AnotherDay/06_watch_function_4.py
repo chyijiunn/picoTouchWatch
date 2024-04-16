@@ -252,9 +252,10 @@ def wholeWatch():
         
         #中圈：電力資料
         reading = ADC(Pin(Vbat_Pin)).read_u16()*3.3/65535*2
-        bat_remain = (reading - 3.37 ) / (4.1-3.37)  #(測得電壓-終止電壓)除以(飽和電壓-終止電壓)
+        bat_remain = (reading - 2.25 ) / (2.75-2.25)  #(測得電壓-終止電壓)除以(飽和電壓-終止電壓)
         BackRunDotRing(120,180,3,bat_remain,25,BG)
-        LCD.write_text(str(int(bat_remain*100)), 113, 173,1,FG)
+        #LCD.write_text(str(int(bat_remain*100)), 113, 173,1,FG)
+        LCD.write_text(str(reading), 113, 173,1,FG)
         
         #左圈：跑步資料
         runDotSRing(52,180,2,runreach,25,color(255,255,255))
