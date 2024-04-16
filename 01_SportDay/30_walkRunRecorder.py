@@ -1,4 +1,4 @@
-#從第 72 行開始
+#從第 77 行開始
 import touch,time,random,math
 LCD = touch.LCD_1inch28()
 Touch=touch.Touch_CST816T(mode=0,LCD=LCD)
