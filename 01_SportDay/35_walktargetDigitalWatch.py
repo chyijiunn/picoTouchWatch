@@ -32,4 +32,3 @@ while 1:
     reach = NUM/TARGET
     colorfactor = int(255*(1-reach))
     runDotRing(reach,110,color(colorfactor,200,colorfactor))
-    
