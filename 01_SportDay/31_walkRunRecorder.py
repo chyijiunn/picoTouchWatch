@@ -5,10 +5,9 @@ Touch=touch.Touch_CST816T(mode=0,LCD=LCD)
 qmi8658=touch.QMI8658()
 
 color = LCD.color
-LCD.set_bl_pwm(35535)
-cx , cy =120 ,120 
+LCD.set_bl_pwm(15535)
+cx , cy =120 ,120
 R,G,B = (random.getrandbits(8),random.getrandbits(8),random.getrandbits(8))
-
 
 def spin( tic , spinLen , color):
     now = list(time.localtime())
@@ -44,42 +43,42 @@ def runDotRing(tic , spinLen , color):
             if i*i + j*j <= r*r:
                 LCD.pixel(cx+x+i,cy-y+j,color)
 
-def stoptime_main():
+def record(dataname,sportState):
+    Touch.Gestures = 'none'
     dataNum = 1
     BG = color(R,G,B)
     FC = color(255-R,255-G,255-B)
     LCD.fill(BG)
-    N1 = time.ticks_ms()#Start 時刻
+    N1 = time.ticks_ms()
     digitalxstart = 20
     digitalystart = 100
-    
-    data = open('record_walk.csv','a')
+    LCD.write_text(sportState,digitalxstart,digitalystart-30,3,FC)
+    data = open(str(dataname),'a')
 
     while True:
-        xyz0 = qmi8658.Read_XYZ()#Data_ini
-        LCD.fill_rect(digitalxstart,digitalystart,210,25,BG)#數字refresh
-        N2 = time.ticks_ms()-N1#End 時刻
-        cS = int(N2//10)#百分秒
-        S = int(N2 //1000)#秒
-        M =int(S//60)#分
-        H =int(M//60)#時
+        xyz0 = qmi8658.Read_XYZ()
+        LCD.fill_rect(digitalxstart,digitalystart,210,25,BG)
+        N2 = time.ticks_ms()-N1
+        cS = int(N2//10)
+        S = int(N2 //1000)
+        M =int(S//60)
+        H =int(M//60)
         now = str(H)+':'+str(M%60)+':'+str(S%60)+'.'+str(cS%100)
         LCD.write_text(now,digitalxstart,digitalystart,3,FC)
-        LCD.show()
-        xyz1 = qmi8658.Read_XYZ()#Data_Final
         
-        if xyz1[5]*xyz0[5]<0:#為了看出區別，放大scale
+        LCD.show()
+        xyz1 = qmi8658.Read_XYZ()
+        
+        if xyz1[5]*xyz0[5]<0:
             data.write(str(now)+','+str(round(1000*xyz1[0],3)) +','+str(1000*round(xyz1[1],3))+','+str(1000*round(xyz1[2],3))+','+str(round(100*(xyz1[3]-xyz0[3]),2))+','+str(round(100*(xyz1[4]-xyz0[4]),2))+','+str(round(100*(xyz1[5]-xyz0[5]),2))+'\n')
             dataNum = dataNum + 1
-        if xyz0[1] < -0.95 :break#y軸近垂直於地面，左手朝上
-        
+        if  Touch.Gestures == 0x04:break#滑回主畫面
     data.close()
-    LCD.write_text('TimeUP',70,digitalystart+40,2,FC)
+    LCD.write_text('Done',90,digitalystart+40,2,FC)
     LCD.show()
-    
     return now , dataNum
 
-while Touch.Gestures != 0x03:#滑動到右邊
+def watch():
     LCD.fill(LCD.black)
     spin(4,100,color(256-R,256-G,256-B))#分
     hourspin(50 , color(256-R,256-G,B))#時
@@ -87,13 +86,18 @@ while Touch.Gestures != 0x03:#滑動到右邊
     LCD.show()
     time.sleep(0.5)
 
+def countdown():
+    for i in range(5,-1,-1):
+        LCD.fill(LCD.black)
+        LCD.write_text(str(i),100,100,6,color(250,180,40))
+        LCD.show()
+        time.sleep(1)
     
-LCD.fill(LCD.black)
+def main():
+    while Touch.Gestures != 0x03:watch()
+    LCD.fill(LCD.black)
+    record('datawalk.csv','WalkState')
+    countdown()
+    record('datarun.csv','RunState')
 
-traindata = list(stoptime_main())
-
-LCD.fill(LCD.black)
-LCD.write_text(str(traindata[0]),60,150,2,color(90,180,40))
-LCD.write_text('DataWalk = '+ str(traindata[1]),70,180,1,color(250,180,40))
-LCD.show()
-
+main()
