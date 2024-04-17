@@ -1,4 +1,4 @@
-# 加跑步資料，列為內圈
+# 資料加入百分比數字呈現
 import time , touch, math
 LCD = touch.LCD_1inch28()
 qmi8658 = touch.QMI8658()

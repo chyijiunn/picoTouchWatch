@@ -10,7 +10,6 @@ c1 = color(55,25,125)
 c2 = color(255,225,255)
 LCD.fill(BG)
 
-
 xstart,ystart,xlen,ylen = 80,160 , 80 , 20
 
 
@@ -21,6 +20,8 @@ def scrollBar():
     Touch.Flag = 0
     Touch.Mode = 1
     Touch.Set_Mode(Touch.Mode)
+    LCD.write_text('Slide!',40,120,4,c1)
+    LCD.show()
 
     while True:
         LCD.fill_rect(xstart,ystart,xlen,ylen,c1)

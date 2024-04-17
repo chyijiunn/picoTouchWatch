@@ -1,4 +1,4 @@
-#儘量避免使用巢狀menu
+# 儘量避免使用巢狀menu
 # line 33 必要使用時，需搭配長按、避免連續同方向之撥選
 from machine import ADC ,Pin
 import touch,time,random,math

@@ -52,7 +52,7 @@ def watch(cx,cy, spinLen):
     runDotRing(5,110,color(255,0,0))
     LCD.show()
 
-def record(dataname,sportState):
+def record(dataname,sportState):#存檔名稱,運動狀態
     Touch.Gestures = 'none'#先清空Gestures值
     dataNum = 1
     BG = color(R,G,B)
@@ -79,7 +79,18 @@ def record(dataname,sportState):
         xyz1 = qmi8658.Read_XYZ()
         
         if xyz1[5]*xyz0[5]<0:#todo
-            data.write(str(now)+','+str(round(1000*xyz1[0],3)) +','+str(1000*round(xyz1[1],3))+','+str(1000*round(xyz1[2],3))+','+str(round(xyz1[3],3))+','+str(round(xyz1[4],3))+','+str(round(xyz1[5],3))+'\n')
+            data.write(str(now)+','+
+                       str(round(1000*xyz1[0],3)) +','+
+                       str(round(1000*xyz1[1],3))+','+
+                       str(round(1000*xyz1[2],3))+','+
+                       
+                       str(round(1000*xyz1[3],3)) +','+
+                       str(round(1000*xyz1[4],3))+','+
+                       str(round(1000*xyz1[5],3))+','+
+                       
+                       str(round(100*(xyz1[3]-xyz0[3]),2))+','+
+                       str(round(100*(xyz1[4]-xyz0[4]),2))+','+
+                       str(round(100*(xyz1[5]-xyz0[5]),2))+'\n')
             dataNum = dataNum + 1
         if  Touch.Gestures == 0x04:break#滑回主畫面
     data.close()

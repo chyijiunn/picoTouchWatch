@@ -1,3 +1,4 @@
+#根據跑步資料和走路資料的時間來估量距離，不準，未完成
 import time , touch, math , random
 LCD = touch.LCD_1inch28()
 Touch=touch.Touch_CST816T(mode=0,LCD=LCD)

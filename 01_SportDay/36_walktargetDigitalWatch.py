@@ -5,7 +5,7 @@ qmi8658 = touch.QMI8658()
 LCD.set_bl_pwm(15535)
 color = LCD.color
 
-LCD.fill(color(255,225,0))
+LCD.fill(color(0,0,0))
 
 cx , cy =120 ,120 #center of watch
 NUM = 0
@@ -23,8 +23,9 @@ while 1:
     xyz=qmi8658.Read_XYZ()
     N1 = xyz[5]
     now = list(time.gmtime())
-    LCD.write_text('{0:0>2}:{1:0>2}:{2:0>2}'.format(now[3],now[4],now[5]),60,160,2,color(255,225,0))
+    LCD.write_text('{0:0>2}:{1:0>2}:{2:0>2}'.format(now[3],now[4],now[5]),60,120,2,color(255,225,0))
     LCD.show()
+    LCD.fill_rect(60,120,130,20,color(0,0,0))
     xyz=qmi8658.Read_XYZ()
     N2 = xyz[5]
     if N1*N2 < 0:

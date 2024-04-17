@@ -18,7 +18,7 @@ while 1:
     #功能 1，滑向右邊
     if Touch.Gestures == 0x03:
         function()
-        Touch.Gestures = 'none'
+        #Touch.Gestures = 'none'
 
     else:
         LCD.fill(0)
