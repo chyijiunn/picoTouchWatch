@@ -76,7 +76,7 @@ while 1:
     
     #中圈：電力資料
     reading = Vbat.read_u16()*3.3/65535*2
-    bat_remain = (reading - 2.25 ) / (2.63-2.25)  #(測得電壓-終止電壓)除以(飽和電壓-終止電壓)
+    bat_remain = (reading - 2.25 ) / (2.75-2.25)  #(測得電壓-終止電壓)除以(飽和電壓-終止電壓)
     BackRunDotRing(120,180,3,bat_remain,25,color(0,0,0))#黑色為抹除資料
     LCD.show()
     LCD.write_text(str(int(bat_remain*100)), 113, 173,1,color(255,255,255))
@@ -84,5 +84,3 @@ while 1:
     #左圈：跑步資料
     runDotRing(52,180,2,runreach,25,color(100,colorfactorR,colorfactorR))
     LCD.write_text(str(int(runreach*100)), 42, 173,1,color(255,255,255))
-    
-    

@@ -1,4 +1,4 @@
-#加入選色功能，滑入右方進入選色
+#加入選色功能
 from machine import Pin, SPI, ADC
 import touch,time,random,math
 LCD = touch.LCD_1inch28()
@@ -178,7 +178,7 @@ def walkandRun():
     xyz=touch.QMI8658().Read_XYZ()
     N2 = xyz[5]
     y = xyz[1]
-    if N1*N2 < 0:
+    if N1*N2 < 0:#todo
         if (N1>10 and N1<threhold) or (N2>10 and N2<threhold):
             walknum = walknum + 1
         elif (((N1 or N2) > threhold) or ((N1 or N2)< -threhold))and y < - 0.8 :
@@ -220,9 +220,9 @@ def walkandRun():
     return bat_remain
 
 def refresh():
-    LCD.fill_rect(182,173,10,10,BG)#右圈
+    LCD.fill_rect(182,173,30,10,BG)#右圈
     LCD.fill_rect(113,173,25,10,BG)#中圈
-    LCD.fill_rect(42,173,10,10,BG)#右圈
+    LCD.fill_rect(42,173,30,10,BG)#左圈
     LCD.fill_rect(120,70,80,10,BG)#右上長條1刷除
     LCD.fill_rect(120,58,80,10,BG)#右上長條2 backlight 刷除
 
@@ -279,8 +279,6 @@ def colorini():
     seccolor , minspincolor , hourspincolor =color(c_colorR,c_colorG,c_colorB),color(c_colorR,c_colorG,c_colorB) ,color(c_colorR,c_colorG,c_colorB)
     digiseccolor , digitimecolor = seccolor , hourspincolor
     BATcolor = color(125,255,125)
-    
-    
 backlight = 35535
 LCD.set_bl_pwm(backlight)
 BG = color(0,0,0)

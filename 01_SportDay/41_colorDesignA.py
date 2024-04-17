@@ -1,9 +1,10 @@
-#加入選色功能，滑入右方進入選色
+#加入選色功能
 from machine import Pin, SPI, ADC
 import touch,time,random,math
 LCD = touch.LCD_1inch28()
 Touch=touch.Touch_CST816T(mode=0,LCD=LCD)
 color = LCD.color
+qmi8658 = touch.QMI8658()
 
 class Point:
     def __init__(self,x,y):
@@ -172,23 +173,22 @@ def BackRunDotRing(cx, cy , thick , reach , r , color):
                 LCD.pixel(cx+x+i,cy-y+j,color)
 
 def refresh():
-    LCD.fill_rect(182,173,10,10,BG)#右圈
+    LCD.fill_rect(182,173,30,10,BG)#右圈
     LCD.fill_rect(113,173,25,10,BG)#中圈
-    LCD.fill_rect(42,173,10,10,BG)#右圈
+    LCD.fill_rect(42,173,30,10,BG)#左圈
     LCD.fill_rect(120,70,80,10,BG)#右上長條1刷除
     LCD.fill_rect(120,58,80,10,BG)#右上長條2 backlight 刷除
     
 def littlefuntion():
     global walknum , runnum , walkTARGET , runTARGET ,backlight
-    xyz=touch.QMI8658().Read_XYZ()
-    N1 = xyz[5]
-    xyz=touch.QMI8658().Read_XYZ()
-    N2 = xyz[5]
-    y = xyz[1]
-    if N1*N2 < 0:
-        if (N1>10 and N1<threhold) or (N2>10 and N2<threhold):
+    N1 = qmi8658.Read_XYZ()
+    time.sleep(0.05)
+    N2 = qmi8658.Read_XYZ()
+    
+    if N1[5]*N2[5] < 0:#todo
+        if (N2[3]> 100) and (N2[3] <  150) and N2[0]>0.4 :
             walknum = walknum + 1
-        elif (((N1 or N2) > threhold) or ((N1 or N2)< -threhold))and y < - 0.8 :
+        elif ((N2[3]> -50) and (N2[3] <  100) )or  ((N2[3]> 150) and (N2[3] <  270) ) and  N2[1]< - 0.8:
             runnum = runnum + 1
     walkreach = walknum/walkTARGET
     runreach = runnum/runTARGET
@@ -283,7 +283,7 @@ backlight = 35535
 LCD.set_bl_pwm(backlight)
 BG = color(0,0,0)
 FG = color(255,255,255)
-colorR , colorG , colorB = random.randint(125,255),random.randint(125,255) ,random.randint(125,255)
+colorR , colorG , colorB = random.randint(225,255),random.randint(125,255) ,random.randint(125,255)
 
 #錶盤大小
 platesize = 40
@@ -299,7 +299,6 @@ walknum = 0
 walkTARGET = 100 # 每天要走幾步
 runnum = 0
 runTARGET = 100 # 每天要跑幾步
-threhold = 300
 now = list(time.localtime())
 
 def plateini():
@@ -331,7 +330,6 @@ while True:
         BG = color(colorR,colorG,125)
         colorini()
         plateini()
-        
         
     if Touch.Gestures == 0x03:#滑入右，休眠
         LCD.sleep_mode(1)

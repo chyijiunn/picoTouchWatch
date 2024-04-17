@@ -6,11 +6,9 @@ LCD.set_bl_pwm(30000)
 
 cx , cy =120 ,120
 walknum = 0
-walkTARGET = 100 # 每天要走幾步
+walkTARGET = 5000 # 每天要走幾步
 runnum = 0
-runTARGET = 100 # 每天要跑幾步
-
-threhold = 300 #設立閾值
+runTARGET = 1000 # 每天要跑幾步
                 
 def runDotRing(r , walkreach , spinLen , color):
     x = int(spinLen*math.sin(math.radians(walkreach*360)))
@@ -24,17 +22,14 @@ def color(R,G,B):
     return (((G&0b00011100)<<3) +((B&0b11111000)>>3)<<8) + (R&0b11111000)+((G&0b11100000)>>5)
 
 while 1:
-    
-    xyz=qmi8658.Read_XYZ()
-    N1 = xyz[5]
+    N1 = qmi8658.Read_XYZ()
     time.sleep(0.05)
-    xyz=qmi8658.Read_XYZ()
-    N2 = xyz[5]
-    y = xyz[1]
-    if N1*N2 < 0:#這裡以個人的資料來定義
-        if (N1>10 and N1<threhold) or (N2>10 and N2<threhold):
+    N2=qmi8658.Read_XYZ()
+    
+    if N1[5]*N2[5] < 0:#這裡以個人的資料來定義
+        if (N2[3]> 100) and (N2[3] <  150) :
             walknum = walknum + 1
-        elif (((N1 or N2) > threhold) or ((N1 or N2)< -threhold)) and y < - 0.8:
+        elif ((N2[3]> -50) and (N2[3] <  100) )or  ((N2[3]> 150) and (N2[3] <  270) ) and  N2[1]< - 0.8:
             runnum = runnum + 1
             
     walkreach = walknum/walkTARGET

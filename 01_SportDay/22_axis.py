@@ -7,6 +7,6 @@ qmi8658=touch.QMI8658()
 
 while True:
     xyz=qmi8658.Read_XYZ()
-    print(xyz[0:3]) #xyz[] from 0~6
-    utime.sleep(0.05)
+    print(xyz[0],xyz[3],xyz[5]) #xyz[] from 0~6
+    utime.sleep(0.1)
     

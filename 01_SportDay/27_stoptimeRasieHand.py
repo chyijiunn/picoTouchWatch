@@ -6,6 +6,7 @@ color = LCD.color
 LCD.set_bl_pwm(35535)
 
 def stoptime_main():
+    Touch.Gestures = 'none'
     R,G,B = (random.getrandbits(8),random.getrandbits(8),random.getrandbits(8))
     BG = color(R,G,B)
     FC = color(255-R,255-G,255-B)
