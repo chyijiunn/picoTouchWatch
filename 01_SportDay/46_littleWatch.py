@@ -1,28 +1,20 @@
 from machine import Pin,I2C,SPI,PWM
-import framebuf , time , math
+import framebuf , time , math , touch
 
-DC = 8
-CS = 9
-SCK = 10
-MOSI = 11
-RST = 12
-BL = 25
-Vbat_Pin = 29
-
-width = 240
-height = 240
+LCD = touch.LCD_1inch28()
+LCD.set_bl_pwm(15535)
 
 class LCD_1inch28(framebuf.FrameBuffer):
     def __init__(self):
         self.width = 240
         self.height = 240
         
-        self.cs = Pin(CS,Pin.OUT)
-        self.rst = Pin(RST,Pin.OUT)
+        self.cs = Pin(9,Pin.OUT)
+        self.rst = Pin(12,Pin.OUT)
         
         self.cs(1)
-        self.spi = SPI(1,100_000_000,polarity=0, phase=0,sck=Pin(SCK),mosi=Pin(MOSI),miso=None)
-        self.dc = Pin(DC,Pin.OUT)
+        self.spi = SPI(1,100_000_000,polarity=0, phase=0,sck=Pin(10),mosi=Pin(11),miso=None)
+        self.dc = Pin(8,Pin.OUT)
         self.dc(1)
         self.buffer = bytearray(self.height * self.width * 2)
         super().__init__(self.buffer, self.width, self.height, framebuf.RGB565)
@@ -36,7 +28,7 @@ class LCD_1inch28(framebuf.FrameBuffer):
         self.fill(self.white)
         self.show()
 
-        self.pwm = PWM(Pin(BL))
+        self.pwm = PWM(Pin(25))
         self.pwm.freq(5000)
         
     def write_cmd(self, cmd):
@@ -54,7 +46,7 @@ class LCD_1inch28(framebuf.FrameBuffer):
         self.cs(1)
         
     def set_bl_pwm(self,duty):
-        self.pwm.duty_u16(duty)#max 65535
+        self.pwm.duty_u16(duty)
         
     def init_display(self):
         self.rst(1)
@@ -416,33 +408,52 @@ def triangle(x1,y1,x2,y2,x3,y3,c):
     
 def tri_filled(x1,y1,x2,y2,x3,y3,c): 
     t=Triangle(Point(x1,y1),Point(x2,y2),Point(x3,y3))
-    t.fillTri() 
-
-def end_point(theta, rr): # Calculate end of hand offsets
-    theta_rad = math.radians(theta)                       
-    theta_rad = math.radians(theta)    
-    xx = int(rr * math.sin(theta_rad))
-    yy = -int(rr * math.cos(theta_rad))                     
-    return xx,yy
-
-cx , cy  = 120 ,120
-LCD = LCD_1inch28()
-LCD.set_bl_pwm(5535)
-c = LCD.red
-r = 60
-
-ti = 20
-tick = 360/ ti
-for i in range(ti):
-    x_shift = int(r*math.sin(math.radians(i*tick)))
-    y_shift = int(r*math.cos(math.radians(i*tick)))
-        
-    x_shift_next = int(r*math.sin(math.radians(tick*(i+1))))
-    y_shift_next = int(r*math.cos(math.radians(tick*(i+1))))
-        
-    tri_filled(cx,cy,cx+x_shift,cy-y_shift,cx+x_shift_next,cy-r*y_shift_next,c)
-    LCD.show()
-    #LCD.fill(LCD.white)
+    t.fillTri()
     
-    print(i)
+def color(R,G,B): #  RGB888 to RGB565
+    return (((G&0b00011100)<<3) +((B&0b11111000)>>3)<<8) + (R&0b11111000)+((G&0b11100000)>>5)
+
+def spin(value,base_length,r,c):#針底部寬度、長度、顏色
+    spinBottomx_shift = int(base_length*math.sin(math.radians(value+90)))
+    spinBottomy_shift = int(base_length*math.cos(math.radians(value+90)))
+    spinTopX_shift = int(r*math.sin(math.radians(value)))
+    spinTopY_shift = int(r*math.cos(math.radians(value)))
+            
+    tri_filled(cx+spinTopX_shift,cy-spinTopY_shift,cx+spinBottomx_shift,cy-spinBottomy_shift,cx-spinBottomx_shift,cy+spinBottomy_shift,c)
+
+
+BG = color(0,0,0)
+LCD.fill(BG)
+#錶盤大小
+platesize = 40
+#錶盤中心點
+cx , cy  = 70 ,70
+#定義時、分刻度線
+tickmark_h , tick_mark_m = platesize-3 , platesize
+tickmark_h_color = color(255,100,0)
+tickmark_m_color = color(255,0,0)
+#針長度、顏色
+secspin ,minspin , hourspin = tickmark_h-5,platesize ,platesize/2
+seccolor , minspincolor , hourspincolor =color(250,225,0),color(200,100,0) ,color(250,50,125)
+
+for i in range(60):#先畫分刻度線
+    LCD.line(cx+int(tick_mark_m*math.sin(math.radians(6*i))),cy-int(tick_mark_m*math.cos(math.radians(6*i))),cx+int(platesize*math.sin(math.radians(6*i))),cy-int(platesize*math.cos(math.radians(6*i))),tickmark_m_color)
+for i in range(12):#再畫時刻度線
+    LCD.line(cx+int(tickmark_h*math.sin(math.radians(30*i))),cy-int(tickmark_h*math.cos(math.radians(30*i))),cx+int(platesize*math.sin(math.radians(30*i))),cy-int(platesize*math.cos(math.radians(30*i))),tickmark_h_color)
+
+while True:
+    now = list(time.localtime())
+    x_shift = int(secspin*math.sin(math.radians(6*now[5])))
+    y_shift = int(secspin*math.cos(math.radians(6*now[5])))
+    c = hourspincolor
+    spin((30*now[3]+0.5*now[4]),4,hourspin,c)#hour
+    c = minspincolor
+    spin((6*now[4]+0.1*now[5]),3,minspin,c)#min
+    c = seccolor
+    LCD.line(cx,cy,cx+x_shift,cy-y_shift,c)#sec
+    LCD.show()
+    c = BG
+    spin((30*now[3]+0.5*now[4]),4,hourspin,c)
+    spin((6*now[4]+0.1*now[5]),3,minspin,c)
+    LCD.line(cx,cy,cx+x_shift,cy-y_shift,c)
 
