@@ -1,4 +1,4 @@
-import time , touch, math , random,sys
+import utime , touch, math , random,sys
 LCD = touch.LCD_1inch28()
 qmi8658=touch.QMI8658()
 LCD.set_bl_pwm(35535)
@@ -8,7 +8,7 @@ c2 = color(255,0,0)
 c3 = color(255,255,0)
 LCD.fill(0)
 threshold = 80
-
+s = 0
 n=0
 Num = 0
 
@@ -26,13 +26,14 @@ def count():
     global xyz0 , xyz1,Num
     if  (ydot < threshold):
         Num = Num+1
-        time.sleep(0.5)
+        utime.sleep(0.5)
     LCD.fill_rect(110,200,48,24,0)
     LCD.write_text(str(Num),110,200,3,c1)
 
 def goal():
     LCD.fill(0)
     LCD.write_text('GOAL',50,180,5,c1)
+    LCD.write_text(str(int(s)),50,160,2,c1)
     LCD.show()
     for j in range(2):
         for i in range(30):
@@ -47,36 +48,48 @@ def goal():
     for i in range(3):
         LCD.fill(0)
         LCD.show()
-        time.sleep(0.5)
+        utime.sleep(0.5)
         LCD.write_text('Ready',30,120,5,c1)
         LCD.show()
-        time.sleep(0.5)
-    for i in range(25):
-        LCD.fill_rect(220,70+3*i,2,120-5*i,c3)
+        utime.sleep(0.5)
+    for i in range(20):
+        LCD.fill_rect(230,100+3*i,2,100-6*i,c3)
         LCD.scroll(-8,0)
         LCD.show()    
-    
+def energy():
+    global s
+    if xyz1[0] < xyz0[0]:
+        score = (xyz1[0]-xyz0[0])*(xyz1[0]-xyz0[0])*(tick1-tick0)*pow(10,3)
+        s = s+ score
+        return s
+        
 def main():
-    global ydot
+    global ydot , xyz0 , xyz1, tick1,tick0
     while 1:
+        tick0 = utime.ticks_ms()
         xyz0 = qmi8658.Read_XYZ()
         ydot = int(140 + 80*xyz0[0])
-        print(ydot)
+        #print(ydot)
         boundary()
         drawData()
         LCD.show()
+        tick1 = utime.ticks_ms()
         xyz1 = qmi8658.Read_XYZ()
         count()
-            
-        if Num > 3:
+        energy()
+
+        if Num > 10:
             goal()
-            time.sleep(1)
+            utime.sleep(1)
             break
+        
 def restart():
-    global Num
+    global Num ,s
     main()
     Num = 0
+    s = 0
     
 while 1:
     try:restart()
     except KeyboardInterrupt:break
+
