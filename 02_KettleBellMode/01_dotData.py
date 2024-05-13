@@ -25,22 +25,24 @@ def drawData():
     
 def count():
     global xyz0 , xyz1,Num
-    if (xyz0[3]*xyz1[3]) < 0 and (ydot < 80):
+    if (xyz0[4]*xyz1[4]) < 0 and (ydot < 80):
         Num = Num+1
-        time.sleep(0.5)
+        #time.sleep(0.5)
     LCD.fill_rect(110,200,48,24,0)
     LCD.write_text(str(Num),110,200,3,c1)
+    print(xyz0[4]*xyz1[4])
+
     
 while 1:
     try:
         xyz0 = qmi8658.Read_XYZ()
         ydot = int(140 + 80*xyz0[0])
-        #print(ydot)
+        print(ydot)
         boundary()
         drawData()
         LCD.show()
         xyz1 = qmi8658.Read_XYZ()
         count()
         
-    except SyntaxError:
+    except KeyboardInterrupt:
         break
