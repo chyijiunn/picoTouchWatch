@@ -12,7 +12,6 @@ LCD.fill(BG)
 
 xstart,ystart,xlen,ylen = 80,160 , 80 , 20
 
-
 def scrollBar():
     x = y = data = 0
     color = 0
