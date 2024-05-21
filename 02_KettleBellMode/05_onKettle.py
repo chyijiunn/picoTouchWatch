@@ -8,6 +8,7 @@ c2 = color(255,0,0)
 c3 = color(255,255,0)
 LCD.fill(0)
 threshold = 70
+goalthreshold = -0.2
 s = 0
 n=0
 Num = 0
@@ -36,7 +37,7 @@ def drawData():
     
 def count():
     global xyz0 , xyz1,Num,scorelist,s
-    if  (ydot < threshold):
+    if  (xyz0[0] < goalthreshold):
         Num = Num+1
         utime.sleep(0.5)
         scorelist.append(s)
@@ -86,7 +87,7 @@ def main():
         tick0 = utime.ticks_ms()
         xyz0 = qmi8658.Read_XYZ()
         ydot = int(140 + 85*xyz0[0])
-        
+        print(ydot)
         boundary()
         drawData()
         LCD.show()
