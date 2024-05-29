@@ -261,7 +261,7 @@ while True:
         LCD.sleep_mode(1)
         LCD.set_bl_pwm(0)
         Touch.Gestures = 'none'
-    if Touch.Gestures == 0x0C:
+    if Touch.Gestures == 0x0C:#長按解除休眠
         LCD.sleep_mode(0)
         LCD.set_bl_pwm(10000)
         Touch.Gestures = 'none'
