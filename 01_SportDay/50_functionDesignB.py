@@ -339,9 +339,11 @@ def calculator():
             draw_button(x, y, 25, 25, label)
 
     def update_display(expression):
-        LCD.fill_rect(0, 0, 240, 90, BG)
+        LCD.fill_rect(0, 0, 240, 80, BG)
         shift = int(16*len(list(expression)))
         LCD.write_text(expression, 200-shift, 60,2 , c2)
+        LCD.write_text('Calculate',45 , 20,2 , c1)
+        
         LCD.show()
 
     draw_buttons()
