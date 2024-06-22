@@ -281,7 +281,7 @@ def colorini():
     BATcolor = color(125,255,125)
 backlight = 35535
 LCD.set_bl_pwm(backlight)
-BG = color(0,0,0)
+BG = color(61, 112, 104)
 FG = color(255,255,255)
 colorR , colorG , colorB = random.randint(125,255),random.randint(125,255) ,125
 
@@ -297,9 +297,9 @@ secspin ,minspin , hourspin = tickmark_h-5,platesize - 4 ,platesize/2
 colorini()
 
 walknum = 0
-walkTARGET = 100 # 每天要走幾步
+walkTARGET = 10000 # 每天要走幾步
 runnum = 0
-runTARGET = 100 # 每天要跑幾步
+runTARGET = 1000 # 每天要跑幾步
 threhold = 300
 now = list(time.localtime())
 
@@ -316,9 +316,75 @@ def plateini():
     Ring(120,180,2,23,BATcolor)
     LCD.show()
 
-plateini()
+def calculator():
+    Touch.Mode = 1
+    Touch.Set_Mode(Touch.Mode)
+    c1 = color(120,120,120)
+    c2 = color(255,255,255)
+    LCD.fill(0)
+    expression = ""#顯示空字串
 
+    def draw_button(x, y, w, h, label):
+        LCD.fill_rect(x, y, w, h, c1)
+        LCD.text(label, x + w//4, y + h//4,c2)
+        
+    def draw_buttons():
+        buttons = [
+            ('7', 60, 90), ('8', 90, 90), ('9', 120, 90), ('/', 150, 90),
+            ('4', 60, 120), ('5', 90, 120), ('6', 120, 120), ('x', 150, 120),
+            ('1', 60, 150), ('2', 90, 150), ('3', 120, 150), ('-', 150, 150),
+            ('0', 60, 180), ('C', 90, 180), ('=', 120, 180), ('+', 150, 180),
+            ]
+        for label, x, y in buttons:
+            draw_button(x, y, 25, 25, label)
+
+    def update_display(expression):
+        LCD.fill_rect(0, 0, 240, 80, BG)
+        shift = int(16*len(list(expression)))
+        LCD.write_text(expression, 200-shift, 60,2 , c2)
+        LCD.write_text('Calculate',45 , 20,2 , c1)
+        
+        LCD.show()
+
+    draw_buttons()
+    update_display(expression)
+    LCD.show()
+
+    Touch.Flgh = 0
+    Touch.Flag = 0
+    while True:
+        if Touch.Flag == 1:
+            x , y = Touch.X_point , Touch.Y_point
+            
+            if y > 90:  # 判斷是否於按鈕區
+                col = (x-60) // 30
+                row = (y - 90) // 30
+                index = row * 4 + col
+                buttons = '789/456*123-0C=+'
+                if index < len(buttons):
+                    char = buttons[index]
+                    if char == 'C':
+                        expression = ""
+                    elif char == '=':
+                        try:
+                            expression = str(eval(expression))
+                        except:
+                            expression = "Error"
+                    else:
+                        expression += char
+                    update_display(expression)
+            if y < 60:
+                Touch.Mode = 0
+                Touch.Set_Mode(Touch.Mode)
+                plateini()
+                break
+                
+            time.sleep(0.2)
+            Touch.Flag = 0 
+
+plateini()
 while True:
+    
     if Touch.Gestures == 0x0C:#長按，改背景色，點第二下才能選色
         Touch.Gestures = 'none'
         Touch=touch.Touch_CST816T(mode=1,LCD=LCD)
@@ -348,15 +414,17 @@ while True:
         if backlight > 65535:backlight = 65535
         LCD.set_bl_pwm(backlight)
         Touch.Gestures = 'none'
+        
     if Touch.Gestures == 0x02:#向下滑，- 亮度
         backlight = backlight - 5000
         if backlight < 1:backlight = 1
         LCD.set_bl_pwm(backlight)
         Touch.Gestures = 'none'
-    if Touch.Gestures == 0x04:#滑入左，碼表開啟
+        
+    if Touch.Gestures == 0x04:#滑入左，開啟cal
         Touch.Gestures = 'none'
-        stoptime()
-         
+        calculator()
+        
     else:
         watch()
         refresh()

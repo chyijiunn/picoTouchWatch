@@ -409,7 +409,7 @@ def tri_filled(x1,y1,x2,y2,x3,y3,c):
 
 cx , cy  = 120 ,120
 LCD = LCD_1inch28()
-LCD.set_bl_pwm(5535)
+LCD.set_bl_pwm(15535)
 
 r = 100
 ti = 60
