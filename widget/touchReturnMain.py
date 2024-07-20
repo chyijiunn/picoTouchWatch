@@ -83,7 +83,7 @@ def main():
             
             LCD.show()
     
-Touch.Flgh = 0
+#Touch.Flgh = 0
 Touch.Flag = 0
 r = 10
 b1 ,b2 = 10 ,230
