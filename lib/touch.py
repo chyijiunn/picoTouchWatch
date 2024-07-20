@@ -422,6 +422,50 @@ class LCD_1inch28(framebuf.FrameBuffer):
             self.write_cmd(0x10)
         else:
             self.write_cmd(0x11)
+    
+    def fill_tri(self,x0, y0, x1, y1, x2, y2, color):
+        def sort_vertices(v0, v1, v2):
+            # Sort vertices by y-coordinate ascending (v0 <= v1 <= v2)
+            if v0[1] > v1[1]:
+                v0, v1 = v1, v0
+            if v1[1] > v2[1]:
+                v1, v2 = v2, v1
+            if v0[1] > v1[1]:
+                v0, v1 = v1, v0
+            return v0, v1, v2
+
+        def fill_bottom_flat_triangle(v0, v1, v2, color):
+            invslope1 = (v1[0] - v0[0]) / (v1[1] - v0[1])
+            invslope2 = (v2[0] - v0[0]) / (v2[1] - v0[1])
+            curx1 = v0[0]
+            curx2 = v0[0]
+            for y in range(v0[1], v1[1] + 1):
+                self.line(int(curx1), y, int(curx2), y, color)
+                curx1 += invslope1
+                curx2 += invslope2
+
+        def fill_top_flat_triangle(v0, v1, v2, color):
+            invslope1 = (v2[0] - v0[0]) / (v2[1] - v0[1])
+            invslope2 = (v2[0] - v1[0]) / (v2[1] - v1[1])
+            curx1 = v2[0]
+            curx2 = v2[0]
+            for y in range(v2[1], v0[1] - 1, -1):
+                self.line(int(curx1), y, int(curx2), y, color)
+                curx1 -= invslope1
+                curx2 -= invslope2
+
+        # Sort vertices
+        v0, v1, v2 = sort_vertices((x0, y0), (x1, y1), (x2, y2))
+
+        # Fill the triangle
+        if v1[1] == v2[1]:
+            fill_bottom_flat_triangle(v0, v1, v2, color)
+        elif v0[1] == v1[1]:
+            fill_top_flat_triangle(v0, v1, v2, color)
+        else:
+            v3 = (int(v0[0] + ((v1[1] - v0[1]) / (v2[1] - v0[1])) * (v2[0] - v0[0])), v1[1])
+            fill_bottom_flat_triangle(v0, v1, v3, color)
+            fill_top_flat_triangle(v1, v3, v2, color)
         
 #Touch drive 
 class Touch_CST816T(object):
@@ -738,10 +782,3 @@ def DOF_READ():
         if(Touch.Gestures == 0x0C):
             break
 
-if __name__=='__main__':
-    LCD = LCD_1inch28()
-    LCD.set_bl_pwm(65535)
-    Touch=Touch_CST816T(mode=1,LCD=LCD)
-    #DOF_READ()
-    #Touch_Gesture()
-    Touch_HandWriting()
