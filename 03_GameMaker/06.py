@@ -7,8 +7,8 @@ LCD = touch.LCD_1inch28()
 color = LCD.color
 LCD.set_bl_pwm(15535)
 
-R = 120
-r = 15
+R = 110
+r = 10
 cx = 120
 cy = 120
 while True:
@@ -17,7 +17,7 @@ while True:
     if xyz[1] < 1 and xyz[1] > -1:
         y = int(-xyz[0]*R)+ cy
         xsqrt = int(sqrt(R*R-pow((y-cy),2)))
-        print(xsqrt)
+        #print(xsqrt)
         if xyz[1] >= 0:
             x = cx + xsqrt
         else:

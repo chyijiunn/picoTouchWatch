@@ -49,6 +49,7 @@ laser = Laser(LASER_WIDTH, LASER_HEIGHT)
 
 while 1:
     if Touch.Flag == True:
+        
         x , y = Touch.X_point , Touch.Y_point
         laser.fire(x,y)
         laser.move(-5)
