@@ -21,7 +21,7 @@ for i in range(ti):
     spinTopX_shift = int(r*math.sin(math.radians(i*tick)))
     spinTopY_shift = int(r*math.cos(math.radians(i*tick)))
         
-    tri_filled(cx+spinTopX_shift,cy-spinTopY_shift,cx+spinBottomLx_shift,cy-spinBottomLy_shift,cx+spinBottomRx_shift,cy-spinBottomRy_shift,c)
+    LCD.fill_tri(cx+spinTopX_shift,cy-spinTopY_shift,cx+spinBottomLx_shift,cy-spinBottomLy_shift,cx+spinBottomRx_shift,cy-spinBottomRy_shift,c)
     LCD.show()
     #time.sleep(1)
     LCD.fill(LCD.white)
