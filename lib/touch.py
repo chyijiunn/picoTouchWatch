@@ -41,6 +41,7 @@ class LCD_1inch28(framebuf.FrameBuffer):
         self.white =   0xffff
         self.black =   0x0000
         self.brown =   0X8430
+        self.magenta = 49148
         
         self.fill(self.white) #Clear screen
         self.show()#Show 
