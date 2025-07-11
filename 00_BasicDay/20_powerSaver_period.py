@@ -2,7 +2,7 @@ import time , touch, math , random
 from machine import Timer
 qmi8658=touch.QMI8658()
 LCD = touch.LCD_1inch28()
-Brightness =15535
+Brightness = 15535
 LCD.set_bl_pwm(Brightness)
 cx , cy =120 ,120 #center of watch
 

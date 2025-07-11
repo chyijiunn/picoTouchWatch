@@ -1,6 +1,6 @@
 import time , touch, math , random
 LCD = touch.LCD_1inch28()
-LCD.set_bl_pwm(15535)
+LCD.set_bl_pwm(35535)
 
 def spin( cx,cy, tic , spinLen , color):
     now = list(time.localtime())
