@@ -162,14 +162,13 @@ tickmark_m_color = color(255,0,0)
 secspin ,minspin , hourspin = tickmark_h-5,platesize ,platesize/2
 seccolor , minspincolor , hourspincolor =color(250,225,0),color(200,100,0) ,color(250,50,125)
 
-for i in range(60):#先畫分刻度線
+for i in range(60):#分刻度線
     LCD.line(cx+int(tick_mark_m*math.sin(math.radians(6*i))),cy-int(tick_mark_m*math.cos(math.radians(6*i))),cx+int(platesize*math.sin(math.radians(6*i))),cy-int(platesize*math.cos(math.radians(6*i))),tickmark_m_color)
-for i in range(12):#再畫時刻度線
+for i in range(12):#時刻度線
     LCD.line(cx+int(tickmark_h*math.sin(math.radians(30*i))),cy-int(tickmark_h*math.cos(math.radians(30*i))),cx+int(platesize*math.sin(math.radians(30*i))),cy-int(platesize*math.cos(math.radians(30*i))),tickmark_h_color)
 
 while True:
     if Touch.Gestures == 0x03:
-        
         Touch.Gestures = 'none'
     else:watch()
 
