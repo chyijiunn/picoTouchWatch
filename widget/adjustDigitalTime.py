@@ -56,5 +56,3 @@ while 1:
     LCD.write_text(str(adjust()),60,100,3,LCD.white)
     LCD.show()
     LCD.fill_rect(60,100,120,40,LCD.black)
-
-
