@@ -1,4 +1,6 @@
-# 調整長按時間 到 line 219 1200ms --> 2000 ms 長按兩秒
+# menu.py - RP2040 + 1.28" 240x240 圓形 LCD 表盤式選單（滑動/點選/執行 .py）
+# 對接你的 touch.py：Touch_CST816T（中斷更新 Flag / X_point / Y_point）
+# 注意：你的 LCD driver 是 FrameBuffer，畫完必須 LCD.show()
 
 import os, time, math, gc
 import touch
