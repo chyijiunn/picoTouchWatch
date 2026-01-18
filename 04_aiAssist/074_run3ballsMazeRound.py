@@ -1,4 +1,5 @@
-import time, touch, math
+import time, math , touch
+from hw import LCD, IMU ,TP
 
 # ---- 亂數（MicroPython 常用 urandom）----
 try:
@@ -6,15 +7,9 @@ try:
 except ImportError:
     import random
 
-# ----------------------------
-# 硬體初始化
-# ----------------------------
-qmi8658 = touch.QMI8658()
-LCD = touch.LCD_1inch28()
-LCD.set_bl_pwm(15535)
+Touch = TP
 
 # 觸控（你要點一下重生迷宮就需要它）
-Touch = touch.Touch_CST816T(mode=0, LCD=LCD)
 
 W, H = 240, 240
 CX, CY = 120, 120
@@ -347,7 +342,7 @@ while True:
         dt = 0.05
 
     # 讀 IMU（一次）
-    xg, yg, zg, gx, gy, gz = qmi8658.Read_XYZ()
+    xg, yg, zg, gx, gy, gz = IMU.Read_XYZ()
 
     # 正規化
     gmag = math.sqrt(xg*xg + yg*yg + zg*zg)

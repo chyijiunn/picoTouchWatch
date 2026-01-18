@@ -1,8 +1,5 @@
-import time, touch, math
-
-qmi8658 = touch.QMI8658()
-LCD = touch.LCD_1inch28()
-LCD.set_bl_pwm(15535)
+import time, math
+from hw import LCD, IMU
 
 W, H = 240, 240
 CX, CY = 120, 120
@@ -154,7 +151,7 @@ while True:
         dt = 0.05
 
     # 讀 IMU（一次）
-    xg, yg, zg, gx, gy, gz = qmi8658.Read_XYZ()
+    xg, yg, zg, gx, gy, gz = IMU.Read_XYZ()
 
     # 正規化（避免瞬間加速度使得偏差變大）
     gmag = math.sqrt(xg*xg + yg*yg + zg*zg)

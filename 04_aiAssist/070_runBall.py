@@ -1,8 +1,6 @@
-import time, touch, math
+import time, math
+from hw import LCD, IMU
 
-qmi8658 = touch.QMI8658()
-LCD = touch.LCD_1inch28()
-LCD.set_bl_pwm(15535)
 c_ball = LCD.color(255,255,0)
 c_bg   = LCD.color(0,0,0)
 c_ring = LCD.color(40,40,40)
@@ -53,7 +51,7 @@ while True:
         dt = 0.05
 
     # 讀 IMU（一次就好）
-    xg, yg, zg, gx, gy, gz = qmi8658.Read_XYZ()
+    xg, yg, zg, gx, gy, gz = IMU.Read_XYZ()
 
     # 建議做正規化：避免動作時 gmag != 1 造成爆衝
     gmag = math.sqrt(xg*xg + yg*yg + zg*zg)

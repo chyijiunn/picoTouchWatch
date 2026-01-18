@@ -1,13 +1,11 @@
-import time , touch
-from machine import Timer
-qmi8658=touch.QMI8658()#引入六軸
-LCD = touch.LCD_1inch28()
-LCD.set_bl_pwm(15535)
+import time, math
+from hw import LCD, IMU
+
 LCD.fill(0)
 LCD.show()
 c = LCD.color(255,255,0)        
 while True:
-    z_a = qmi8658.Read_XYZ()[5]/500
+    z_a = IMU.Read_XYZ()[5]/500
     y = int(120 * (1 + z_a ))
     LCD.pixel(120, y, c)
     LCD.scroll(-1,0)

@@ -6,7 +6,8 @@
 #   - Tap screen to regenerate a new maze
 #   - Static background drawn once per maze; per-frame restores background buffer if available
 
-import time, math, touch
+import time, math , touch
+from hw import LCD, IMU ,TP
 
 # --- Random (MicroPython usually has urandom) ---
 try:
@@ -17,11 +18,10 @@ except ImportError:
 # ----------------------------
 # Hardware init
 # ----------------------------
-qmi8658 = touch.QMI8658()
-LCD = touch.LCD_1inch28()
-LCD.set_bl_pwm(15535)
+
 
 # Touch init (robust across minor driver naming differences)
+Touch = TP
 Touch = None
 try:
     Touch = touch.Touch_CST816T(mode=0, LCD=LCD)
@@ -427,8 +427,7 @@ while True:
         dt = 0.05
 
     # Read IMU once
-    xg, yg, zg, gx, gy, gz = qmi8658.Read_XYZ()
-
+    xg, yg, zg, gx, gy, gz = IMU.Read_XYZ()
     # Normalize to reduce dynamic accel impact
     gmag = math.sqrt(xg*xg + yg*yg + zg*zg)
     if gmag > 0:
