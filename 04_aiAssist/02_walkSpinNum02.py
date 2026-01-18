@@ -17,10 +17,11 @@ while True:
     
     LCD.fill_rect(120,100,120,40,c0 )#refresh
     LCD.write_text(str(degree),120,100,3,c) #(str , x , y , color )
+    co = int(120*math.cos(math.radians(degree)))
     
-    LCD.line(120,120,120+yg,120-int(math.cos(math.radians(degree))),c)
+    LCD.line(120,120,120+y,120-co,c)
 
     LCD.show()
-    time.sleep(0.01)
+    time.sleep(0.08)
 
 
