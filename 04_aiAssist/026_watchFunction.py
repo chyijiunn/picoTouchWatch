@@ -2,8 +2,10 @@ import time, math
 from hw import LCD
 
 LCD.fill(0)
-LCD.show()
-c = LCD.color(255,255,0)
+
+c1 = LCD.color(255,255,255)
+c2 = LCD.color(0,255,0)
+c3 = LCD.color(255,0,0)
 
 def spin(value , length , color):
     x = math.sin(math.radians(value*6))
@@ -14,9 +16,10 @@ def watch(cx , cy , factor):
     r = factor * 120
     h = now[3]
     if h > 12: h = h-12
-    spin((now[4]/60 + h)*5,r*5/12,c)
-    spin(now[4],r*10/12,c)
-    spin(now[5],r*11/12,c)
+    spin((now[4]/60 + h)*5,r*5/12,c1)
+    spin(now[4],r*10/12,c2)
+    spin(now[5],r*11/12,c3)
+
 while True:
     watch(120,120,1)
     LCD.show()
