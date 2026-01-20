@@ -18,5 +18,3 @@ while True:
 
     LCD.show()
     time.sleep(0.01)
-
-
