@@ -105,3 +105,4 @@ draw_plate()
 while True:
     draw_watch()
     time.sleep(1)
+    
