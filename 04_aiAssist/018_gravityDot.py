@@ -23,7 +23,7 @@ while True:
     x = 120 + int(120 * yg)
     
     LCD.fill_rect(0,0,240,240,c0 )
-    runDot(2 , x , y , c)
+    runDot(5 , x , y , c)
 
     LCD.show()
     time.sleep(0.01)

@@ -6,12 +6,12 @@ LCD.show()
 c = LCD.color(255,255,0)        
 while True:
     z_a = IMU.Read_XYZ()[5]/500
-    y = int(120 * (1 + z_a ))
-    LCD.pixel(120, y, c)
+    y = int(120 * z_a)
+    LCD.line(120,120,120, 120+y, c)
     LCD.scroll(-1,0)
-    print(z_a)
-    #print(round(xyz[5],2))
+    print(y)
 
     LCD.show()
-    time.sleep(0.01)
+    time.sleep(0.1)
+
 

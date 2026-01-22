@@ -1,16 +1,16 @@
-# menu.py - RP2040 + 1.28" 240x240 圓形 LCD 表盤式選單（滑動/點選/執行 .py）
-# 對接你的 touch.py：Touch_CST816T（中斷更新 Flag / X_point / Y_point）
-# 注意：你的 LCD driver 是 FrameBuffer，畫完必須 LCD.show()
+# 調整長按時間 到 line 219 1200ms --> 2000 ms 長按兩秒
 
 import os, time, math, gc
 import touch
 import hw
 
 # -------------------------
-# LCD 初始化（與你專案一致）
+# LCD / 觸控 / IMU 由 hw.py 統一初始化
+# （menu 不再自行 new LCD/TP，以避免重複初始化與記憶體浪費）
 # -------------------------
-LCD = hw.LCD  # unified via hw.py
-# (backlight is handled in hw.py)
+LCD = hw.LCD
+TP  = getattr(hw, "TP", None)
+IMU = getattr(hw, "IMU", None)
 
 W, H = 240, 240
 CX, CY = 120, 120
@@ -29,6 +29,9 @@ R_ICON = 14
 
 EXCLUDE = set(["boot.py", "main.py", "touch.py", "menu.py"])
 
+
+# 由 TouchAdapter 於初始化時設定；供 run_script 長按退回監控使用
+TP_SINGLETON = TP
 # -------------------------
 # 小工具
 # -------------------------
@@ -134,6 +137,57 @@ def _free_memory_before_run(keep_modules=("sys","gc","os","time","math","touch",
         pass
 
 
+
+# -------------------------
+# 子程式返回 Menu（長按）
+# -------------------------
+class AbortToMenu(Exception):
+    """Raised internally to abort a running script and return to menu."""
+    pass
+
+class LongPressGuard:
+    """
+    在「子程式執行期間」監控長按，觸發則丟 AbortToMenu。
+    由於你的 touch.py 在 Mode=1 時只有 IRQ 才更新座標，
+    這裡採用 I2C 直接輪詢座標暫存（0x03..0x06）來判斷是否仍在按壓，
+    可在不改子程式碼的前提下提供較穩定的長按退回。
+    """
+    def __init__(self, tp, threshold_ms=2000, poll_ms=35):
+        self.tp = tp
+        self.threshold_ms = threshold_ms
+        self.poll_ms = poll_ms
+        self._press_start = None
+        self._last_poll = time.ticks_ms()
+
+    def _read_xy(self):
+        # 直接讀座標暫存（同 get_point() 使用的 register）
+        # 若硬體/韌體不支援，則回傳 (0,0)
+        try:
+            b = self.tp._read_block(0x03, 4)  # [xh,xl,yh,yl]
+            x = ((b[0] & 0x0F) << 8) | b[1]
+            y = ((b[2] & 0x0F) << 8) | b[3]
+            return x, y
+        except Exception:
+            return 0, 0
+
+    def check(self):
+        now = time.ticks_ms()
+        if time.ticks_diff(now, self._last_poll) < self.poll_ms:
+            return
+        self._last_poll = now
+
+        x, y = self._read_xy()
+        touching = (x != 0 or y != 0)
+
+        if touching:
+            if self._press_start is None:
+                self._press_start = now
+            elif time.ticks_diff(now, self._press_start) >= self.threshold_ms:
+                raise AbortToMenu()
+        else:
+            self._press_start = None
+
+
 def run_script(path):
     import gc, sys
 
@@ -144,6 +198,7 @@ def run_script(path):
 
     # 先 GC，能回收多少算多少
     gc.collect()
+
 
     # --- 關鍵：避免腳本重新配置 115200 bytes FrameBuffer ---
     # 把 touch.LCD_1inch28 暫時改成回傳現成的 LCD（單例）
@@ -164,23 +219,89 @@ def run_script(path):
     except Exception:
         tp_singleton = None
 
+    # ---- 長按退回 Menu：在子程式執行期間監控 ----
+    # 依賴 TP_SINGLETON（TouchAdapter 建立的 tp），若不存在則停用長按退回
+    _guard = LongPressGuard(tp_singleton, threshold_ms=2000, poll_ms=35) if tp_singleton is not None else None
+
     def _tp_singleton(*a, **k):
         return tp_singleton if tp_singleton is not None else _orig_tp_ctor(*a, **k)
 
     try:
         touch.LCD_1inch28 = _lcd_singleton
+        # ---- 子程式長按退回：hook time.sleep / time.sleep_ms / LCD.show ----
+        _orig_sleep = getattr(time, "sleep", None)
+        _orig_sleep_ms = getattr(time, "sleep_ms", None)
+        _orig_show = getattr(LCD, "show", None)
+
+        def _guard_check():
+            if _guard is not None:
+                _guard.check()
+
+        def _sleep_hook(sec):
+            # 將 sleep 切成小段，期間可偵測長按
+            try:
+                ms = int(sec * 1000)
+            except Exception:
+                ms = 0
+            step = 30
+            while ms > 0:
+                _guard_check()
+                if _orig_sleep_ms is not None:
+                    _orig_sleep_ms(step if ms > step else ms)
+                else:
+                    if _orig_sleep is not None:
+                        _orig_sleep((step if ms > step else ms) / 1000)
+                ms -= step
+            _guard_check()
+
+        def _sleep_ms_hook(ms):
+            try:
+                ms = int(ms)
+            except Exception:
+                ms = 0
+            step = 30
+            while ms > 0:
+                _guard_check()
+                if _orig_sleep_ms is not None:
+                    _orig_sleep_ms(step if ms > step else ms)
+                else:
+                    if _orig_sleep is not None:
+                        _orig_sleep((step if ms > step else ms) / 1000)
+                ms -= step
+            _guard_check()
+
+        def _show_hook(*a, **k):
+            _guard_check()
+            return _orig_show(*a, **k)
+
+        if _orig_sleep is not None:
+            time.sleep = _sleep_hook
+        if _orig_sleep_ms is not None:
+            time.sleep_ms = _sleep_ms_hook
+        if _orig_show is not None:
+            LCD.show = _show_hook
         if _orig_tp_ctor is not None and tp_singleton is not None:
             touch.Touch_CST816T = _tp_singleton
 
         # 用乾淨 namespace 執行，避免把 menu 的大量全域帶進去
         code = open(path, "r").read()
-        g = {"__name__": "__main__", "__file__": path, "LCD": LCD, "touch": touch}
-        exec(code, g, g)
+        g = {"__name__": "__main__", "__file__": path, "LCD": LCD, "touch": touch, "hw": hw}
+        try:
+            exec(code, g, g)
+        except AbortToMenu:
+            # 長按觸發：回到 Menu
+            raise
 
         safe_clear()
         draw_center_lines(["DONE", path], c_sel, y0=CY - 10)
         LCD.show()
         time.sleep_ms(500)
+
+    except AbortToMenu:
+        safe_clear()
+        draw_center_lines(["BACK", "to menu"], c_sel, y0=CY - 10)
+        LCD.show()
+        time.sleep_ms(350)
 
     except Exception as e:
         safe_clear()
@@ -191,6 +312,17 @@ def run_script(path):
 
     finally:
         # 還原原本 constructor，避免影響 menu 後續行為
+        # 還原 hook（子程式長按退回）
+        try:
+            if '_orig_sleep' in locals() and _orig_sleep is not None:
+                time.sleep = _orig_sleep
+            if '_orig_sleep_ms' in locals() and _orig_sleep_ms is not None:
+                time.sleep_ms = _orig_sleep_ms
+            if '_orig_show' in locals() and _orig_show is not None:
+                LCD.show = _orig_show
+        except Exception:
+            pass
+
         touch.LCD_1inch28 = _orig_lcd_ctor
         if _orig_tp_ctor is not None:
             touch.Touch_CST816T = _orig_tp_ctor
@@ -206,9 +338,16 @@ def run_script(path):
 class TouchAdapter:
     def __init__(self):
         # 你的 touch.py Touch_CST816T 預設：i2c_sda=6,i2c_scl=7,int_pin=21,rst_pin=22
-        self.tp = touch.Touch_CST816T(mode=1)  # point mode
-        self.tp.Mode = 1
-        self.tp.Set_Mode(1)
+        self.tp = TP if TP is not None else touch.Touch_CST816T(mode=1)  # point mode (singleton preferred)
+        try:
+            self.tp.Mode = 1
+            self.tp.Set_Mode(1)
+        except Exception:
+            pass
+
+        # 供子程式長按退回使用（run_script 會讀這個）
+        global TP_SINGLETON
+        TP_SINGLETON = self.tp
 
         self.last_x = 0
         self.last_y = 0
