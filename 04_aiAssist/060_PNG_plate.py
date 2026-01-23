@@ -4,14 +4,12 @@
 # Waveshare 1.28" Round LCD (240x240) + CST816T touch (RP2040, MicroPython)
 # LEFT arc  = walk progress (walknum / walkTARGET)
 # RIGHT arc = run progress  (runnum / runTARGET)
+import hw , time , math
 
-from machine import Pin, ADC
-import time
-import math
-import touch
+LCD   = hw.LCD
+Touch = hw.TP
+IMU   = hw.IMU
 
-LCD = touch.LCD_1inch28()
-Touch = touch.Touch_CST816T(mode=0, LCD=LCD)
 color = LCD.color
 
 W, H = 240, 240
