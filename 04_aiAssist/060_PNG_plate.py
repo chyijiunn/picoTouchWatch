@@ -9,7 +9,6 @@ import hw , time , math
 LCD   = hw.LCD
 Touch = hw.TP
 IMU   = hw.IMU
-
 color = LCD.color
 
 W, H = 240, 240

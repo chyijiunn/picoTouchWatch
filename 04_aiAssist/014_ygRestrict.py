@@ -1,5 +1,6 @@
-import time, math
-from hw import LCD, IMU
+import time, math ,hw
+LCD = hw.LCD
+IMU = hw.IMU
 
 LCD.fill(0)
 LCD.show()
