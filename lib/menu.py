@@ -1,410 +1,144 @@
-# menu.py - RP2040 + 1.28" 240x240 圓形 LCD 表盤式選單（滑動/點選/執行 .py）
-# 對接你的 touch.py：Touch_CST816T（中斷更新 Flag / X_point / Y_point）
-# 注意：你的 LCD driver 是 FrameBuffer，畫完必須 LCD.show()
+# menu.py
+# FINAL STABLE SIMPLE MENU FOR ROUND LCD (RP2040 + CST816T)
+# - Lists .py files in root directory
+# - Vertical scroll with finger drag
+# - Tap filename to execute
+# - Uses hw.py for correct LCD / Touch pin mapping
+# - Polling-based touch (no IRQ dependency)
 
-import os, time, math, gc
-import touch
+import os, time, gc
 import hw
 
-# -------------------------
-# LCD 初始化（與你專案一致）
-# -------------------------
-LCD = hw.LCD  # unified via hw.py
-# (backlight is handled in hw.py)
+LCD = hw.LCD
+TP  = hw.TP
 
 W, H = 240, 240
-CX, CY = 120, 120
 
-# 顏色（沿用你 driver 的 color()）
-c_bg   = LCD.color(0, 0, 0)
-c_ring = LCD.color(40, 40, 40)
-c_txt  = LCD.color(230, 230, 230)
-c_dim  = LCD.color(130, 130, 130)
-c_sel  = LCD.color(0, 220, 160)
-c_err  = LCD.color(255, 80, 80)
+# -------- UI CONFIG --------
+BG   = LCD.color(0, 0, 0)
+FG   = LCD.color(230, 230, 230)
+DIV  = LCD.color(50, 50, 50)
+SEL  = LCD.color(0, 200, 160)
 
-R_OUT  = 118
-R_IN   = 78
-R_ICON = 14
+TOP = 24
+ROW = 24
 
-EXCLUDE = set(["boot.py", "main.py", "touch.py", "menu.py"])
+EXCLUDE = {
+    "boot.py", "main.py", "menu.py",
+    "touch.py", "hw.py"
+}
 
-# -------------------------
-# 小工具
-# -------------------------
-def clamp(v, a, b):
-    return a if v < a else (b if v > b else v)
-
-def safe_clear():
-    LCD.fill(c_bg)
-
-def draw_center_lines(lines, color=c_txt, y0=None):
-    # 使用 LCD.text()；字寬約 8px
-    if y0 is None:
-        y0 = CY - (len(lines) * 10) // 2
-    y = y0
-    for s in lines:
-        x = CX - (len(s) * 8) // 2
-        LCD.text(s, x, y, color)
-        y += 12
-
-def draw_circle_outline(cx, cy, r, col):
-    # Midpoint circle (outline)
-    x = r
-    y = 0
-    d = 1 - r
-    while x >= y:
-        LCD.pixel(cx + x, cy + y, col)
-        LCD.pixel(cx + y, cy + x, col)
-        LCD.pixel(cx - y, cy + x, col)
-        LCD.pixel(cx - x, cy + y, col)
-        LCD.pixel(cx - x, cy - y, col)
-        LCD.pixel(cx - y, cy - x, col)
-        LCD.pixel(cx + y, cy - x, col)
-        LCD.pixel(cx + x, cy - y, col)
-        y += 1
-        if d < 0:
-            d += 2 * y + 1
-        else:
-            x -= 1
-            d += 2 * (y - x) + 1
-
-def fill_circle(cx, cy, r, col):
-    # 小半徑填滿圓（r<=16 用簡單掃描足夠快）
-    rr = r * r
-    for dy in range(-r, r + 1):
-        y = cy + dy
-        if y < 0 or y >= H:
-            continue
-        dx_max = int((rr - dy * dy) ** 0.5)
-        x0 = cx - dx_max
-        x1 = cx + dx_max
-        if x0 < 0: x0 = 0
-        if x1 >= W: x1 = W - 1
-        LCD.hline(x0, y, x1 - x0 + 1, col)
-
-def list_py_files():
+# -------- HELPERS --------
+def list_scripts():
     files = []
-    try:
-        for fn in os.listdir():
-            if not fn.endswith(".py"):
-                continue
-            if fn in EXCLUDE or fn.startswith("."):
-                continue
-            # 排除目錄（有些韌體 os.stat 回傳 tuple）
-            try:
-                st = os.stat(fn)
-                # MicroPython：st[0] 可能是 mode；bit 檢查在不同 port 不一樣，保守處理
-                # 若 stat 失敗或不可判斷，就仍加入
-            except Exception:
-                pass
-            files.append(fn)
-    except Exception:
-        pass
+    for f in os.listdir():
+        if f.endswith(".py") and f not in EXCLUDE and not f.startswith("."):
+            files.append(f)
     files.sort()
     return files
 
-def _free_memory_before_run(keep_modules=("sys","gc","os","time","math","touch","hw")):
-    import sys, gc
+def clamp(v, lo, hi):
+    return lo if v < lo else hi if v > hi else v
 
-    # 1) 先做一次 GC
-    gc.collect()
+def text_center_x(s):
+    return (W - len(s) * 8) // 2
 
-    # 2) 卸載大多數已載入模組（避免佔 RAM）
-    #    只保留：系統核心 + 你的 touch/LCD（否則 Menu 畫面會炸）
-    for k in list(sys.modules.keys()):
-        if k in keep_modules:
-            continue
-        # micropython 內建的一些底層模組也可保留，避免奇怪問題
-        if k.startswith("micropython") or k.startswith("u"):
-            continue
-        try:
-            del sys.modules[k]
-        except Exception:
-            pass
+def draw(items, scroll, highlight=-1):
+    LCD.fill(BG)
+    LCD.hline(0, TOP-1, W, DIV)
 
-    # 3) 再 GC 一次
-    gc.collect()
+    y0 = TOP - (scroll % ROW)
+    first = scroll // ROW
 
-    # 4) 若你的韌體支援 heap_info，可用來觀察（可留可刪）
-    try:
-        import micropython
-        micropython.mem_info()
-    except Exception:
-        pass
-
-
-def run_script(path):
-    import gc, sys
-
-    safe_clear()
-    draw_center_lines(["RUN:", path], c_sel, y0=CY - 10)
-    LCD.show()
-    time.sleep_ms(150)
-
-    # 先 GC，能回收多少算多少
-    gc.collect()
-
-    # --- 關鍵：避免腳本重新配置 115200 bytes FrameBuffer ---
-    # 把 touch.LCD_1inch28 暫時改成回傳現成的 LCD（單例）
-    _orig_lcd_ctor = touch.LCD_1inch28
-    def _lcd_singleton(*a, **k):
-        return LCD
-
-    # 同理：避免腳本重複 new 觸控（可選，但通常也建議）
-    _orig_tp_ctor = getattr(touch, "Touch_CST816T", None)
-
-    # 你 menu 的 TouchAdapter 內已有 tp，可讓腳本拿同一顆（若你要）
-    # 假設你在外面有全域 ta 或 menu.t.tp，這裡示範用 try 安全取用
-    tp_singleton = None
-    try:
-        # 若你是 DialMenu(touch_adapter) 的結構，可把 tp 存成全域供這裡取
-        # 例如在 main() 先 global TP_SINGLETON = ta.tp
-        tp_singleton = TP_SINGLETON  # 如果你有做這個全域
-    except Exception:
-        tp_singleton = None
-
-    def _tp_singleton(*a, **k):
-        return tp_singleton if tp_singleton is not None else _orig_tp_ctor(*a, **k)
-
-    try:
-        touch.LCD_1inch28 = _lcd_singleton
-        if _orig_tp_ctor is not None and tp_singleton is not None:
-            touch.Touch_CST816T = _tp_singleton
-
-        # 用乾淨 namespace 執行，避免把 menu 的大量全域帶進去
-        code = open(path, "r").read()
-        g = {"__name__": "__main__", "__file__": path, "LCD": LCD, "touch": touch}
-        exec(code, g, g)
-
-        safe_clear()
-        draw_center_lines(["DONE", path], c_sel, y0=CY - 10)
-        LCD.show()
-        time.sleep_ms(500)
-
-    except Exception as e:
-        safe_clear()
-        draw_center_lines(["ERROR", "see REPL"], c_err, y0=CY - 10)
-        LCD.show()
-        sys.print_exception(e)
-        time.sleep_ms(900)
-
-    finally:
-        # 還原原本 constructor，避免影響 menu 後續行為
-        touch.LCD_1inch28 = _orig_lcd_ctor
-        if _orig_tp_ctor is not None:
-            touch.Touch_CST816T = _orig_tp_ctor
-
-        gc.collect()
-
-
-# ------------------------------------------------------------
-# 觸控 Adapter：依你的 Touch_CST816T 韌體行為設計
-# - 觸控中斷來時：Touch.Flag=1 並更新 X_point/Y_point
-# - 沒有「release」事件，所以用「最後事件時間 + 閒置超時」推定放開
-# ------------------------------------------------------------
-class TouchAdapter:
-    def __init__(self):
-        # 你的 touch.py Touch_CST816T 預設：i2c_sda=6,i2c_scl=7,int_pin=21,rst_pin=22
-        self.tp = touch.Touch_CST816T(mode=1)  # point mode
-        self.tp.Mode = 1
-        self.tp.Set_Mode(1)
-
-        self.last_x = 0
-        self.last_y = 0
-        self.last_evt_ms = time.ticks_ms()
-        self._pressed = False
-
-        # release 推定閾值（毫秒）
-        self.release_ms = 140
-
-    def poll(self):
-        """
-        回傳：
-          (pressed:bool, x:int, y:int, is_new:bool)
-        is_new = True 代表這次有新觸控點（由中斷 Flag=1 觸發）
-        """
-        now = time.ticks_ms()
-
-        is_new = False
-        if getattr(self.tp, "Flag", 0) == 1:
-            # 消耗一次事件
-            self.tp.Flag = 0
-            x = int(getattr(self.tp, "X_point", 0))
-            y = int(getattr(self.tp, "Y_point", 0))
-            # 你的韌體在無效時可能是 0；避免把 (0,0) 當有效點
-            if x != 0 or y != 0:
-                self.last_x, self.last_y = x, y
-                self.last_evt_ms = now
-                is_new = True
-
-        # 用閒置時間推定 pressed/release
-        if time.ticks_diff(now, self.last_evt_ms) <= self.release_ms:
-            self._pressed = True
+    for i in range(first, min(len(items), first + 12)):
+        y = y0 + (i-first)*ROW
+        if y > H:
+            break
+        if i == highlight:
+            LCD.fill_rect(0, y, W, ROW, LCD.color(20, 40, 35))
+            col = SEL
         else:
-            self._pressed = False
+            col = FG
 
-        return (self._pressed, self.last_x, self.last_y, is_new)
+        name = items[i]
+        if len(name) > 20:
+            name = name[:17] + "..."
+        LCD.text(name, text_center_x(name), y + 7, col)
+        LCD.hline(0, y + ROW - 1, W, DIV)
 
-# ------------------------------------------------------------
-# 圓形表盤 Menu
-# ------------------------------------------------------------
-class DialMenu:
-    def __init__(self, touch_adapter):
-        self.t = touch_adapter
-        self.items = list_py_files()
-        self.n = len(self.items)
-        self.idx = 0
+    LCD.show()
 
-        # 手勢狀態
-        self.pressing = False
-        self.down_x = 0
-        self.down_y = 0
-        self.down_ms = 0
-        self.last_move_x = 0
-        self.dragged = False
-
-        # 顯示用：輕微旋轉感
-        self.angle_offset = 0.0
-
-        self.last_redraw = time.ticks_ms()
-
-    def reload_items(self):
-        self.items = list_py_files()
-        self.n = len(self.items)
-        self.idx = clamp(self.idx, 0, max(0, self.n - 1))
-
-    def step_selection(self, delta):
-        if self.n == 0:
-            return
-        self.idx = (self.idx + delta) % self.n
-
-    def draw(self):
-        safe_clear()
-
-        # 外/內環
-        draw_circle_outline(CX, CY, R_OUT, c_ring)
-        draw_circle_outline(CX, CY, R_IN,  c_ring)
-
-        if self.n == 0:
-            draw_center_lines(["No .py files", "Put scripts in root"], c_dim)
-            LCD.show()
-            return
-
-        # 顯示最多 8 個點位在環上
-        show_k = min(8, self.n)
-        half = show_k // 2
-
-        base = -math.pi / 2  # 上方
-        span = math.radians(240)
-        step = span / max(1, show_k - 1)
-
-        r_mid = (R_IN + R_OUT) // 2
-
-        for i in range(show_k):
-            j = (self.idx - half + i) % self.n
-            a = base - span / 2 + i * step + self.angle_offset
-
-            x = int(CX + r_mid * math.cos(a))
-            y = int(CY + r_mid * math.sin(a))
-
-            sel = (j == self.idx)
-            col_dot = c_sel if sel else c_dim
-
-            fill_circle(x, y, R_ICON if sel else (R_ICON - 4), col_dot)
-
-            name = self.items[j][:-3]
-            if len(name) > 8:
-                name = name[:8] + "…"
-
-            tx = x - (len(name) * 4)
-            ty = y + (R_ICON + 2)
-            LCD.text(name, tx, ty, c_txt if sel else c_dim)
-
-        # 中央標題
-        center = self.items[self.idx][:-3]
-        if len(center) > 16:
-            center = center[:16] + "…"
-        draw_center_lines([center, "Tap: run", "Swipe: switch"], c_txt, y0=CY - 16)
-
-        LCD.show()
-
-    def handle_touch(self):
-        pressed, x, y, is_new = self.t.poll()
-        now = time.ticks_ms()
-
-        # 沒有新事件就不處理移動（避免用舊座標亂判斷）
-        if not is_new and pressed:
-            return False
-
-        if pressed and not self.pressing:
-            # touch down（以第一個新點作為 down）
-            self.pressing = True
-            self.dragged = False
-            self.down_x, self.down_y = x, y
-            self.last_move_x = x
-            self.down_ms = now
-            self.angle_offset = 0.0
-            return True
-
-        if pressed and self.pressing and is_new:
-            dx = x - self.down_x
-            dy = y - self.down_y
-            if dx * dx + dy * dy > 14 * 14:
-                self.dragged = True
-
-            ddx = x - self.last_move_x
-            self.last_move_x = x
-
-            # 視覺旋轉
-            self.angle_offset += ddx * 0.002
-            self.angle_offset = clamp(self.angle_offset, -0.6, 0.6)
-
-            # 主要換項：水平拖曳超過門檻就切換一格
-            if abs(dx) > 40:
-                if dx > 0:
-                    self.step_selection(-1)
-                else:
-                    self.step_selection(+1)
-                # 重置基準避免連跳
-                self.down_x = x
-                self.angle_offset = 0.0
-
-            return True
-
-        if (not pressed) and self.pressing:
-            # release（由閒置超時推定）
-            self.pressing = False
-            dt = time.ticks_diff(now, self.down_ms)
-            self.angle_offset = 0.0
-
-            # 若不是拖曳且按下時間短 => 點選
-            if (not self.dragged) and dt < 380 and self.n > 0:
-                run_script(self.items[self.idx])
-                self.reload_items()
-                return True
-
-        return False
-
-    def loop(self):
-        self.draw()
-        while True:
-            changed = self.handle_touch()
-            now = time.ticks_ms()
-
-            # 互動就重畫；否則降頻
-            if changed or time.ticks_diff(now, self.last_redraw) > 250:
-                self.draw()
-                self.last_redraw = now
-
-            time.sleep_ms(12)
+# -------- MAIN --------
 def main():
-    global TP_SINGLETON
-    ta = TouchAdapter()
-    TP_SINGLETON = ta.tp  # 讓 run_script() 可以重用同一顆觸控
-    menu = DialMenu(ta)
-    menu.loop()
+    items = list_scripts()
+    scroll = 0
+    sel = -1
 
+    max_scroll = max(0, len(items)*ROW - (H-TOP))
+    draw(items, scroll)
+
+    last_y = None
+    down_y = None
+    down_t = 0
+
+    while True:
+        try:
+            if TP.int.value() == 0:  # finger touching
+                TP.get_point()
+                x = TP.X_point
+                y = TP.Y_point
+
+                now = time.ticks_ms()
+
+                if last_y is None:
+                    last_y = y
+                    down_y = y
+                    down_t = now
+                else:
+                    dy = y - last_y
+                    if abs(dy) > 3:
+                        scroll -= dy
+                        scroll = clamp(scroll, 0, max_scroll)
+                        draw(items, scroll)
+                        down_y = None
+                    last_y = y
+
+            else:
+                if last_y is not None and down_y is not None:
+                    if abs(down_y - last_y) < 8 and time.ticks_diff(time.ticks_ms(), down_t) < 300:
+                        idx = (scroll + (last_y - TOP)) // ROW
+                        if 0 <= idx < len(items):
+                            draw(items, scroll, idx)
+                            fn = items[idx]
+                            time.sleep_ms(200)
+
+                            LCD.fill(BG)
+                            LCD.text("Running:", 60, 100, FG)
+                            LCD.text(fn, text_center_x(fn), 120, SEL)
+                            LCD.show()
+
+                            gc.collect()
+                            with open(fn) as f:
+                                exec(f.read(), {"__name__": "__main__"})
+                            gc.collect()
+
+                            items = list_scripts()
+                            max_scroll = max(0, len(items)*ROW - (H-TOP))
+                            scroll = clamp(scroll, 0, max_scroll)
+                            draw(items, scroll)
+
+                last_y = None
+                down_y = None
+
+            time.sleep_ms(15)
+
+        except Exception as e:
+            LCD.fill(BG)
+            LCD.text("Error:", 10, 90, SEL)
+            LCD.text(str(e), 10, 110, FG)
+            LCD.show()
+            time.sleep(2)
+            draw(items, scroll)
 
 if __name__ == "__main__":
     main()

@@ -8,7 +8,7 @@ y = []
 
 # 解析資料
 for line in data:
-    x_str, y_str = line.rstrip().split("-")
+    x_str, y_str = line.rstrip().split(",")
     x.append(datetime.strptime(x_str, "%H:%M:%S"))
     y.append(float(y_str))
 

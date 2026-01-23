@@ -9,7 +9,7 @@ time = []
 yg = []
 
 for line in data:
-    a.append(line.rstrip().split('-'))
+    a.append(line.rstrip().split(','))
 data.close()
 
 for i in range(len(a)):
