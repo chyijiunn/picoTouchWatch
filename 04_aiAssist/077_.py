@@ -3,7 +3,7 @@
 # 主要改進：
 # 1. 使用局部刷新 (Partial Refresh) 取代全屏刷新，大幅提升 FPS
 # 2. 移除 types 模組依賴，修正 ImportError
-import time, math, gc
+import time, math, gc ,lcd_optimizer
 from machine import SPI, Pin
 import touch
 from hw import LCD, IMU, TP
@@ -240,7 +240,7 @@ def main():
     generate_polar_maze()
     
     last_time = time.ticks_ms()
-    
+    updater = lcd_optimizer.ScreenUpdater(LCD)
     # 2. 主迴圈
     while True:
         # 計算時間差 (Delta Time) 以確保物理速度一致
