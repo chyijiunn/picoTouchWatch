@@ -552,10 +552,16 @@ class Touch_CST816T(object):
     def Int_Callback(self,pin):
         if self.Mode == 0 :
             self.Gestures = self._read_byte(0x01)
+            self.Flag = 1
 
         elif self.Mode == 1:           
             self.Flag = 1
             self.get_point()
+            
+        elif self.Mode == 2:  # 新增這段：混合模式
+            self.Gestures = self._read_byte(0x01) # 讀取手勢
+            self.Flag = 1
+            self.get_point()      # 同時讀取座標
 
     def Timer_callback(self,t):
         self.l += 1
