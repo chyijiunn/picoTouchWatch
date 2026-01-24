@@ -1,11 +1,9 @@
-import time , touch
-from machine import Timer
-qmi8658=touch.QMI8658()#引入六軸
-LCD = touch.LCD_1inch28()
-LCD.set_bl_pwm(15535)
+import hw , time
+IMU = hw.IMU	#引入六軸
+LCD = hw.LCD
         
 while True:
-    xyz=qmi8658.Read_XYZ()
+    xyz=IMU.Read_XYZ()
     LCD.fill(LCD.black)
     LCD.text('X '+str(round(xyz[0],2)),60,100,LCD.white)
     LCD.text('Y '+str(round(xyz[1],2)),60,140,LCD.white)
