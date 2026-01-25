@@ -19,7 +19,3 @@ while True:
         LCD.show()
     
     time.sleep(1)
-
-    
-
-

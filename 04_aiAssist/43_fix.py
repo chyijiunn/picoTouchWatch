@@ -24,13 +24,13 @@ def zeroArea(r,color):
                 LCD.pixel(120+i,120+j,0)
 
 def rack(sec):
-    global t0  # 关键：告诉 Python 这里用的是全域 t0（且会更新它）
+    global t0  # 全域 t0
 
-    # 是否在 40x40 的中心区域（你原本的判定方式）
+    # 是否在 40x40 中心
     in_box = ((x-120)*(x-120) < 40*40) and ((y-120)*(y-120) < 40*40)
 
     if in_box:
-        # ticks_diff 比直接相减更稳（可处理 ticks 回捲）
+        # ticks_diff
         t = time.ticks_diff(time.ticks_ms(), t0) // 1000
         if t > sec:
             t = sec
