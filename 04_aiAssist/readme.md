@@ -1,9 +1,5 @@
-# Pico Touch Watch 教學程式整合說明
-
-本文件為單一整合版教學說明，
-僅保留學習重點與前後關聯，
-適合直接作為 GitHub README 或課堂講義使用。
-
+# PicoTouchWatch教學範例
+使用前務必先上傳 /lib 下檔案，包含 hw.py , touch.py 即可作業
 1. **3axis.py**
    - 正確 import 相關 /lib 下檔案
    - 六軸加速度感測（IMU 基礎）
