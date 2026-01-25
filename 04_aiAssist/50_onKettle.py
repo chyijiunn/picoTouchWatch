@@ -1,7 +1,6 @@
-import utime , touch, math , random,sys
-LCD = touch.LCD_1inch28()
-qmi8658=touch.QMI8658()
-LCD.set_bl_pwm(35535)
+import utime , hw, math , random
+IMU = hw.IMU
+LCD = hw.LCD
 color = LCD.color
 c1 = color(255,255,255)
 c2 = color(255,0,0)
@@ -85,14 +84,14 @@ def main():
     ready()
     while 1:
         tick0 = utime.ticks_ms()
-        xyz0 = qmi8658.Read_XYZ()
+        xyz0 = IMU.Read_XYZ()
         ydot = int(140 + 85*xyz0[0])
         print(ydot)
         boundary()
         drawData()
         LCD.show()
         tick1 = utime.ticks_ms()
-        xyz1 = qmi8658.Read_XYZ()
+        xyz1 = IMU.Read_XYZ()
         energy()
         count()
 

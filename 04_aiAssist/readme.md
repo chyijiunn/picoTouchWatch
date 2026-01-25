@@ -147,6 +147,21 @@
 1. **recordFunction.py**
    - 紀錄最佳時間
 
+1. **kettleSwing.py**
+   - 嘗試擺盪看看
+
+1. **finish.py**
+   - 完成目標要出現的字
+
+1. **energy.py**
+   - 能量計算，若能懸空越久是越厲害
+
+1. **plot.py**
+   - 畫著直方圖看看
+
+1. **onKettle.py**
+   - 上去壺鈴吧
+
 1. **PNG_plate.py**
    - 上傳一個圖讓 Ai 來改錶盤
 

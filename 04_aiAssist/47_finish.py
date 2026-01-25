@@ -1,7 +1,7 @@
-import time , touch, math , random,sys
-LCD = touch.LCD_1inch28()
-qmi8658=touch.QMI8658()
-LCD.set_bl_pwm(35535)
+import time , hw, math , random
+IMU = hw.IMU
+LCD = hw.LCD
+
 color = LCD.color
 c1 = color(255,255,255)
 c2 = color(255,0,0)
@@ -59,13 +59,13 @@ def goal():
 def main():
     global ydot
     while 1:
-        xyz0 = qmi8658.Read_XYZ()
+        xyz0 = IMU.Read_XYZ()
         ydot = int(140 + 80*xyz0[0])
         print(ydot)
         boundary()
         drawData()
         LCD.show()
-        xyz1 = qmi8658.Read_XYZ()
+        xyz1 = IMU.Read_XYZ()
         count()
             
         if Num > 3:
