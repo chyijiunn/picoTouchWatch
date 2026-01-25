@@ -10,4 +10,3 @@ LCD.fill_rect(170,100,20,20,c)	#draw a rectangle(xstart , ystart , xlength , ywi
 LCD.fill_tri(40,160,150,170,140,140,c)#draw a triangle(3 pointsite ,c)
 
 LCD.show()
-
