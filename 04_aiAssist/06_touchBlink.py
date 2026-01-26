@@ -18,4 +18,4 @@ while True:
         LCD.fill_rect(5,110,240,24,0)
         LCD.show()
     
-    time.sleep(1)
+    time.sleep(0.1)

@@ -18,5 +18,5 @@ LCD.fill_rect(40,120,32,32,c1)
 LCD.write_text('W',40,120,4,c)
 
 LCD.fill_rect(40,160,40,40,c1)
-LCD.write_text('Hh',40,160,5,c)
+LCD.write_text('Hh',40,160,200,c)
 LCD.show()
