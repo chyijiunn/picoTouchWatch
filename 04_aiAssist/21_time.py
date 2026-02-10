@@ -7,5 +7,6 @@ c = LCD.color(255,255,0)
 
 while True:
     now = list(time.localtime())
+    print(now)
     print(str(now[3])+':'+str(now[4])+':'+str(now[5]))
     time.sleep(1)

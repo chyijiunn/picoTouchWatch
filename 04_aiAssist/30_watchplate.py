@@ -147,7 +147,7 @@ class Watch:
 
 
 # Standalone run (same pattern as 028_watchClass.py)
-watch = Watch(70, 70, 0.35, 7)
+watch = Watch(120, 120, 0.9, 7)
 
 while True:
     watch.draw()
